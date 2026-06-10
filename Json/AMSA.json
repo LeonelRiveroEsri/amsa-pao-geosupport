@@ -1,0 +1,51 @@
+{
+    "ADMIN1": {
+        "user": "admcmzhsp",
+        "pass": "Cmzhsp2022",
+        "url": "https://sig.aminerals.cl/portal/"
+    },
+    "INCO": {
+        "user": "admmlpinco",
+        "pass": "Mlpinco2022",
+        "url": "https://sig.aminerals.cl/portal/"
+    },
+    "PAO": {
+        "user": "admmlppao",
+        "pass": "Mlppao2022",
+        "url": "https://sig.aminerals.cl/portal/"
+    },
+    "MLP": {
+        "user": "admmlpma",
+        "pass": "Mlpma2022",
+        "url": "https://sig.aminerals.cl/portal/"
+    },
+    "ADMIN": {
+        "user": "gatamsa",
+        "pass": "Amsgat_1081",
+        "url": "https://sig.aminerals.cl/portal/"
+    },
+    "CENTINELA": {
+        "user": "admcenop",
+        "pass": "Cenop2022",
+        "url": "https://sig.aminerals.cl/portal/"
+    },
+    "TEST_USER": {
+        "user": "test_user",
+        "pass": "AMSA2022",
+        "url": "https://sig.aminerals.cl/portal/"
+    },
+    "DEMO": {
+        "user": "clamsdemo",
+        "pass": "Clamsdemo_1081",
+        "url": "https://sig.aminerals.cl/portal/"
+    },
+    "PMINERA": {
+        "user": "clamspm",
+        "pass": "Clamspm_1081",
+        "url": "https://sig.aminerals.cl/portal/"
+    },
+    "office365": {
+        "user": "amsgiseeap@aminerals.cl",
+        "pass": "Esrieeap2039"
+    }
+}
