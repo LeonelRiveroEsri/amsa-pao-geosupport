@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 
@@ -12,11 +13,17 @@
             --secondary: #2f75b5;
             --bg: #f4f6f8;
             --card: #ffffff;
-            --text: #222;
-            --muted: #666;
+            --text: #222222;
+            --muted: #666666;
             --border: #d9e2ec;
             --code-bg: #f1f5f9;
             --warning: #f9a825;
+            --ok: #2e7d32;
+            --blue-soft: #eef6ff;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
@@ -30,22 +37,24 @@
         header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            padding: 32px 48px;
+            padding: 34px 48px;
         }
 
         header h1 {
             margin: 0 0 8px 0;
             font-size: 30px;
+            font-weight: 700;
         }
 
         header p {
             margin: 0;
             font-size: 15px;
             opacity: 0.95;
+            max-width: 1100px;
         }
 
         main {
-            max-width: 1180px;
+            max-width: 1200px;
             margin: 32px auto;
             padding: 0 24px 48px;
         }
@@ -64,10 +73,21 @@
             color: var(--primary);
             border-bottom: 2px solid var(--border);
             padding-bottom: 8px;
+            font-size: 22px;
+        }
+
+        h3 {
+            color: var(--secondary);
+            margin-top: 24px;
+            font-size: 18px;
+        }
+
+        p {
+            margin-top: 0;
         }
 
         .note {
-            background: #eef6ff;
+            background: var(--blue-soft);
             border-left: 5px solid var(--secondary);
             padding: 12px 16px;
             border-radius: 8px;
@@ -80,6 +100,31 @@
             padding: 12px 16px;
             border-radius: 8px;
             margin: 16px 0;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .summary-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .summary-card strong {
+            display: block;
+            color: var(--primary);
+            font-size: 22px;
+        }
+
+        .summary-card span {
+            color: var(--muted);
+            font-size: 13px;
         }
 
         table {
@@ -95,6 +140,7 @@
             text-align: left;
             padding: 10px;
             border: 1px solid var(--primary);
+            vertical-align: top;
         }
 
         td {
@@ -116,14 +162,21 @@
             font-size: 13px;
             white-space: pre-wrap;
             word-break: break-all;
+            color: #1e293b;
         }
 
         .status {
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 12px;
-            display: inline-block;
-            font-size: 12px;
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 12.5px;
+            line-height: 1.4;
+            white-space: normal;
+            overflow-wrap: break-word;
+            word-break: normal;
         }
 
         .status-validar {
@@ -141,6 +194,11 @@
             color: #1b5e20;
         }
 
+        .status-target {
+            background: #ede7f6;
+            color: #4527a0;
+        }
+
         .checklist li {
             margin-bottom: 8px;
         }
@@ -151,6 +209,60 @@
             font-size: 13px;
             margin-top: 32px;
         }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            header {
+                padding: 24px 32px;
+            }
+
+            main {
+                max-width: 100%;
+                margin: 0;
+                padding: 20px;
+            }
+
+            section {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+
+            code {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            header {
+                padding: 28px 24px;
+            }
+
+            main {
+                padding: 0 14px 32px;
+            }
+
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th,
+            td {
+                padding: 8px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -160,7 +272,7 @@
         <h1>Documento de Validación de Paths - CL_MLP_PAO</h1>
         <p>
             Documento para ordenar, revisar y despejar las rutas utilizadas en el flujo de carga,
-            gestión y publicación de imágenes, videos y vuelos drone del proyecto PAO.
+            gestión y publicación de imágenes, videos, vuelos drone e Image Server del proyecto PAO.
         </p>
     </header>
 
@@ -168,20 +280,72 @@
 
         <section>
             <h2>1. Objetivo</h2>
+
             <p>
                 Este documento tiene como finalidad dejar ordenados los paths principales del flujo
-                <strong>CL_MLP_PAO</strong>, identificando su uso, tipo de recurso y validaciones necesarias.
+                <strong>CL_MLP_PAO</strong>, identificando su uso, tipo de recurso, ubicación y validaciones necesarias.
             </p>
 
             <div class="note">
                 <strong>Uso recomendado:</strong> revisar cada path con la persona encargada del flujo,
                 confirmar permisos de lectura/escritura, validar estructura de carpetas y confirmar qué rutas
-                son de entrada, cuáles son de geodatabase y cuáles son salidas o recursos publicados.
+                corresponden a entrada, proceso, almacenamiento, publicación, conexión SDE o mosaico target.
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <strong>2</strong>
+                    <span>Servidores principales identificados</span>
+                </div>
+                <div class="summary-card">
+                    <strong>2</strong>
+                    <span>Geodatabases principales</span>
+                </div>
+                <div class="summary-card">
+                    <strong>5</strong>
+                    <span>Carpetas de vuelos por zona</span>
+                </div>
+                <div class="summary-card">
+                    <strong>1</strong>
+                    <span>Mosaico target SDE</span>
+                </div>
             </div>
         </section>
 
         <section>
-            <h2>2. Resumen General de Paths</h2>
+            <h2>2. Servidores Identificados</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Servidor</th>
+                        <th>Uso observado</th>
+                        <th>Validación requerida</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>amssclgis10.ams.gmams.cl</strong></td>
+                        <td>Carpetas de entrada, vuelos drone y Excel de parámetros.</td>
+                        <td>Confirmar permisos de lectura/escritura y si es servidor operativo de entrada.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>amssclgis08.ams.gmams.cl</strong></td>
+                        <td>Proyectos APRX, File Geodatabases, conexiones SDE y recursos ArcGIS Pro.</td>
+                        <td>Confirmar permisos de lectura, vigencia de proyectos y rutas oficiales de publicación.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>amssclgis06</strong></td>
+                        <td>Servidor SQL Server referenciado por la conexión SDE ArcGIS-Aereo.</td>
+                        <td>Confirmar base de datos, usuario SDE, permisos sobre mosaico target y ambiente productivo.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>3. Resumen General de Paths</h2>
 
             <table>
                 <thead>
@@ -256,7 +420,92 @@
         </section>
 
         <section>
-            <h2>3. Feature Classes Principales</h2>
+            <h2>4. Proyecto Image Server Aéreo / Conexión SDE / Mosaico Target</h2>
+
+            <p>
+            <div class="note">
+                <strong>Fase de aterrizaje del flujo:</strong>
+                en esta etapa se busca entender qué archivos nuevos existen en las carpetas de entrada,
+                cómo se calculan y normalizan los nombres desde el Excel de parámetros, y cómo esos nombres
+                se comparan contra los paths y registros existentes en el mosaico target. El objetivo es
+                separar claramente la lógica de entrada, normalización, comparación y carga antes de automatizar
+                o modificar el proceso.
+            </div>
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Nombre lógico</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Path</th>
+                        <th>Estado / Revisión</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td>1</td>
+                        <td><strong>Entrada vuelos drone</strong></td>
+                        <td>Carpeta input</td>
+                        <td>Carpeta donde se dejan los vuelos drone sin procesar.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT</code>
+                        </td>
+                        <td><span class="status status-validar">Evaluar entradas nuevas, fechas, estructura de carpetas
+                                y cuantificar archivos disponibles para carga. Validar normalización de nombres antes de
+                                comparar contra el mosaico target.</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td><strong>Excel de parámetros</strong></td>
+                        <td>Archivo Excel</td>
+                        <td>Archivo base con parámetros generales del flujo.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Parametros_ALL_v3.xlsx</code>
+                        </td>
+                        <td><span class="status status-validar">Revisar lógica de cálculo, nombres normalizados, fechas
+                                y columnas usadas para generar paths/nombres de carga.</span></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td><strong>Conexión SDE ArcGIS-Aereo</strong></td>
+                        <td>Conexión SDE</td>
+                        <td>Conexión a SQL Server / ArcGIS-Aereo usada por el proyecto Image Server.</td>
+                        <td>
+                            <code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\01_Proyectos_ArcGIS\APRX\CL MLP PAO Aereo Image Server_v2\SQLServer-amssclgis06_ArcGIS-Aereo.sde</code>
+                        </td>
+                        <td><span class="status status-validar">Acceso validado. Confirmar ambiente productivo y
+                                permisos sobre el mosaico target.</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>4</td>
+                        <td><strong>Mosaico Target Ortho Geosupport</strong></td>
+                        <td>Mosaic Dataset / Target</td>
+                        <td>Mosaico destino donde se cargan o administran las ortofotos aéreas PAO.</td>
+                        <td>
+                            <code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\01_Proyectos_ArcGIS\APRX\CL MLP PAO Aereo Image Server_v2\SQLServer-amssclgis06_ArcGIS-Aereo.sde\OWD.C_MLP_PAO_IF_Ortho_Geosupport</code>
+                        </td>
+                        <td><span class="status status-validar">Evaluar campos actualizados, lógica de nombres/path y
+                                cruce para detectar registros existentes o nuevos.</span></td>
+                    </tr>
+
+                </tbody>
+            </table>
+
+            <div class="warning">
+                <strong>Importante:</strong> El mosaico
+                <strong>OWD.C_MLP_PAO_IF_Ortho_Geosupport</strong> es el target productivo vigente,
+                si recibe cargas directas desde ArcGIS Pro y si luego se publica como Image Service.
+            </div>
+        </section>
+
+        <section>
+            <h2>5. Feature Classes Principales</h2>
 
             <table>
                 <thead>
@@ -325,7 +574,7 @@
         </section>
 
         <section>
-            <h2>4. Carpetas de Vuelos Drone por Zona</h2>
+            <h2>6. Carpetas de Vuelos Drone por Zona</h2>
 
             <p>
                 Estas carpetas parecen corresponder a vuelos organizados por zona y fecha.
@@ -399,13 +648,63 @@
         </section>
 
         <section>
-            <h2>5. Checklist para despejar el flujo</h2>
+            <h2>7. Clasificación Funcional de Rutas</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Función</th>
+                        <th>Rutas asociadas</th>
+                        <th>Validación clave</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Entrada</strong></td>
+                        <td>Vuelos_Drone_Sin_Procesar\INPUT</td>
+                        <td>Confirmar quién deposita archivos, formato esperado y permisos de escritura.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Parámetros</strong></td>
+                        <td>Parametros_ALL_v3.xlsx</td>
+                        <td>Confirmar si controla zonas, nombres, vuelos, fechas, rutas o reglas de carga.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Proyecto ArcGIS Pro</strong></td>
+                        <td>VISOR TERRITORIAL SIG PAO v7.aprx / CL MLP PAO Aereo Image Server_v2.aprx</td>
+                        <td>Confirmar cuál se usa para visualización y cuál para carga/publicación de imágenes.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Almacenamiento local GDB</strong></td>
+                        <td>CL_MLP_PAO_Imagenes.gdb / CL_MLP_PAO_v1.gdb</td>
+                        <td>Confirmar si son datos fuente, datos de apoyo, respaldo o capas de trabajo.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Base corporativa SDE</strong></td>
+                        <td>SQLServer-amssclgis06_ArcGIS-Aereo.sde</td>
+                        <td>Confirmar ambiente, credenciales, propietario de esquema y permisos.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mosaico Target</strong></td>
+                        <td>OWD.C_MLP_PAO_IF_Ortho_Geosupport</td>
+                        <td>Confirmar si es el destino oficial de carga para ortofotos aéreas.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>8. Checklist para Despejar el Flujo</h2>
 
             <ul class="checklist">
                 <li>
                     Confirmar si el servidor principal de entrada es
-                    <strong>amssclgis10</strong> y el servidor principal de geodatabases es
+                    <strong>amssclgis10</strong> y el servidor principal de geodatabases/proyectos es
                     <strong>amssclgis08</strong>.
+                </li>
+                <li>
+                    Confirmar el rol del servidor <strong>amssclgis06</strong> como SQL Server asociado a la conexión
+                    SDE.
                 </li>
                 <li>
                     Validar permisos de lectura sobre todas las carpetas de vuelos drone.
@@ -418,8 +717,22 @@
                     Confirmar si el Excel <strong>Parametros_ALL_v3.xlsx</strong> es el archivo vigente.
                 </li>
                 <li>
-                    Confirmar si el APRX vigente es
+                    Confirmar si el APRX vigente del visor es
                     <strong>VISOR TERRITORIAL SIG PAO v7.aprx</strong>.
+                </li>
+                <li>
+                    Confirmar si el APRX vigente para publicación/carga de imágenes es
+                    <strong>CL MLP PAO Aereo Image Server_v2.aprx</strong>.
+                </li>
+                <li>
+                    Confirmar si la conexión
+                    <strong>SQLServer-amssclgis06_ArcGIS-Aereo.sde</strong>
+                    es la conexión productiva.
+                </li>
+                <li>
+                    Confirmar si el mosaico
+                    <strong>OWD.C_MLP_PAO_IF_Ortho_Geosupport</strong>
+                    es el target oficial de carga.
                 </li>
                 <li>
                     Confirmar si la capa de imágenes oblicuas vigente es
@@ -447,7 +760,7 @@
         </section>
 
         <section>
-            <h2>6. Preguntas para la persona encargada del flujo</h2>
+            <h2>9. Preguntas para la Persona Encargada del Flujo</h2>
 
             <table>
                 <thead>
@@ -460,7 +773,7 @@
                 <tbody>
                     <tr>
                         <td>1</td>
-                        <td>¿Dónde se dejan inicialmente las imágenes o vuelos sin procesar?</td>
+                        <td>¿Dónde se dejan inicialmente las imágenes, ortofotos o vuelos sin procesar?</td>
                         <td></td>
                     </tr>
                     <tr>
@@ -470,7 +783,8 @@
                     </tr>
                     <tr>
                         <td>3</td>
-                        <td>¿El Excel de parámetros controla zonas, vuelos, fechas o nombres de capas?</td>
+                        <td>¿El Excel de parámetros controla zonas, vuelos, fechas, rutas, nombres de capas o reglas de
+                            carga?</td>
                         <td></td>
                     </tr>
                     <tr>
@@ -480,7 +794,8 @@
                     </tr>
                     <tr>
                         <td>5</td>
-                        <td>¿Qué capa se actualiza primero: índice de vuelos, imágenes oblicuas o videos?</td>
+                        <td>¿Qué capa se actualiza primero: índice de vuelos, imágenes oblicuas, videos o mosaico
+                            target?</td>
                         <td></td>
                     </tr>
                     <tr>
@@ -490,22 +805,47 @@
                     </tr>
                     <tr>
                         <td>7</td>
-                        <td>¿El APRX contiene modelos, layouts, conexiones o simbología oficial?</td>
+                        <td>¿El APRX del visor contiene modelos, layouts, conexiones o simbología oficial?</td>
                         <td></td>
                     </tr>
                     <tr>
                         <td>8</td>
-                        <td>¿Existe publicación hacia Portal, Image Server, Feature Layer o Web Map?</td>
+                        <td>¿El APRX del Image Server contiene el flujo oficial de carga/publicación?</td>
                         <td></td>
                     </tr>
                     <tr>
                         <td>9</td>
-                        <td>¿Qué usuario o cuenta de servicio ejecuta el proceso?</td>
+                        <td>¿Existe publicación hacia Portal, Image Server, Feature Layer, Web Map o Dashboard?</td>
                         <td></td>
                     </tr>
                     <tr>
                         <td>10</td>
+                        <td>¿Qué usuario o cuenta de servicio ejecuta el proceso?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
                         <td>¿Qué validaciones se realizan antes de mover o cargar imágenes?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>¿El mosaico target se actualiza directamente o existe una etapa intermedia?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>¿Qué campos del mosaico se deben poblar o actualizar después de la carga?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>¿Existe una convención de nombres para vuelos, ortofotos, imágenes oblicuas y videos?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>¿Existe ambiente de desarrollo, QA y producción, o todas las rutas son productivas?</td>
                         <td></td>
                     </tr>
                 </tbody>
@@ -513,7 +853,7 @@
         </section>
 
         <section>
-            <h2>7. Observaciones Técnicas</h2>
+            <h2>10. Observaciones Técnicas</h2>
 
             <ul>
                 <li>
@@ -525,23 +865,31 @@
                     <strong>GDB + Dataset + Feature Class</strong>, cuando aplique.
                 </li>
                 <li>
+                    Las rutas hacia un recurso dentro de una conexión SDE deben incluir:
+                    <strong>archivo .sde + esquema + nombre del dataset</strong>.
+                </li>
+                <li>
                     Se debe validar si cada ruta es de:
-                    <strong>entrada, proceso, almacenamiento, publicación o respaldo</strong>.
+                    <strong>entrada, proceso, almacenamiento, publicación, respaldo o target productivo</strong>.
                 </li>
                 <li>
                     Si el proceso se ejecuta desde servidor o tarea programada, se debe confirmar que el usuario de
                     ejecución tenga acceso a:
-                    <strong>amssclgis08</strong> y <strong>amssclgis10</strong>.
+                    <strong>amssclgis08</strong>, <strong>amssclgis10</strong> y la conexión SDE hacia
+                    <strong>amssclgis06</strong>.
                 </li>
                 <li>
                     Se recomienda confirmar si existen rutas históricas, rutas vigentes y rutas de producción para no
                     mezclar ambientes.
                 </li>
+                <li>
+                    El mosaico target debe validarse desde ArcGIS Pro con la misma cuenta que ejecutará la carga.
+                </li>
             </ul>
         </section>
 
         <section>
-            <h2>8. Matriz de Validación Manual</h2>
+            <h2>11. Matriz de Validación Manual</h2>
 
             <table>
                 <thead>
@@ -573,6 +921,30 @@
                     </tr>
                     <tr>
                         <td>APRX Visor Territorial SIG PAO v7</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>APRX CL MLP PAO Aereo Image Server_v2</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Conexión SDE ArcGIS-Aereo</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Mosaico target OWD.C_MLP_PAO_IF_Ortho_Geosupport</td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -627,6 +999,73 @@
                         <td></td>
                         <td></td>
                     </tr>
+                    <tr>
+                        <td>Carpetas de vuelos por zona 26_06</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>12. Flujo Tentativo a Confirmar</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Etapa</th>
+                        <th>Descripción tentativa</th>
+                        <th>Ruta / Recurso asociado</th>
+                        <th>Validación pendiente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1. Recepción</td>
+                        <td>Ingreso de vuelos drone o imágenes sin procesar.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT</code>
+                        </td>
+                        <td>Confirmar formato, estructura y responsable.</td>
+                    </tr>
+                    <tr>
+                        <td>2. Parametrización</td>
+                        <td>Lectura o revisión del Excel base de parámetros.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Parametros_ALL_v3.xlsx</code>
+                        </td>
+                        <td>Confirmar campos obligatorios y versión vigente.</td>
+                    </tr>
+                    <tr>
+                        <td>3. Revisión territorial</td>
+                        <td>Uso de macrozonas e índice de vuelos como apoyo espacial.</td>
+                        <td>Macrozonas / Índice vuelos imágenes</td>
+                        <td>Confirmar si se usa para validación espacial o solo consulta.</td>
+                    </tr>
+                    <tr>
+                        <td>4. Gestión en ArcGIS Pro</td>
+                        <td>Apertura de proyecto APRX asociado a visor o Image Server.</td>
+                        <td>APRX Visor Territorial / APRX Image Server Aéreo</td>
+                        <td>Confirmar cuál es el APRX operativo para cada etapa.</td>
+                    </tr>
+                    <tr>
+                        <td>5. Carga a target</td>
+                        <td>Carga o actualización del mosaico target en SDE.</td>
+                        <td>
+                            <code>OWD.C_MLP_PAO_IF_Ortho_Geosupport</code>
+                        </td>
+                        <td>Confirmar si la carga es manual, con herramienta ArcGIS Pro o script.</td>
+                    </tr>
+                    <tr>
+                        <td>6. Publicación</td>
+                        <td>Publicación o actualización del Image Server / servicio asociado.</td>
+                        <td>Portal / ArcGIS Server / Image Server</td>
+                        <td>Confirmar URL, servicio, usuario publicador y permisos.</td>
+                    </tr>
                 </tbody>
             </table>
         </section>
@@ -640,3 +1079,4 @@
 </body>
 
 </html>
+```
