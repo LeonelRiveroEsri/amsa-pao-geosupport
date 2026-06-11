@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documento de Validación de Paths - CL_MLP_PAO</title>
+
+    <style>
+        :root {
+            --primary: #1f4e79;
+            --secondary: #2f75b5;
+            --bg: #f4f6f8;
+            --card: #ffffff;
+            --text: #222;
+            --muted: #666;
+            --border: #d9e2ec;
+            --code-bg: #f1f5f9;
+            --warning: #f9a825;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 32px 48px;
+        }
+
+        header h1 {
+            margin: 0 0 8px 0;
+            font-size: 30px;
+        }
+
+        header p {
+            margin: 0;
+            font-size: 15px;
+            opacity: 0.95;
+        }
+
+        main {
+            max-width: 1180px;
+            margin: 32px auto;
+            padding: 0 24px 48px;
+        }
+
+        section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .note {
+            background: #eef6ff;
+            border-left: 5px solid var(--secondary);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .warning {
+            background: #fff8e1;
+            border-left: 5px solid var(--warning);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid var(--primary);
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        code {
+            display: block;
+            background: var(--code-bg);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .status {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            font-size: 12px;
+        }
+
+        .status-validar {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-base {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        .status-fc {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .checklist li {
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 32px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Documento de Validación de Paths - CL_MLP_PAO</h1>
+        <p>
+            Documento para ordenar, revisar y despejar las rutas utilizadas en el flujo de carga,
+            gestión y publicación de imágenes, videos y vuelos drone del proyecto PAO.
+        </p>
+    </header>
+
+    <main>
+
+        <section>
+            <h2>1. Objetivo</h2>
+            <p>
+                Este documento tiene como finalidad dejar ordenados los paths principales del flujo
+                <strong>CL_MLP_PAO</strong>, identificando su uso, tipo de recurso y validaciones necesarias.
+            </p>
+
+            <div class="note">
+                <strong>Uso recomendado:</strong> revisar cada path con la persona encargada del flujo,
+                confirmar permisos de lectura/escritura, validar estructura de carpetas y confirmar qué rutas
+                son de entrada, cuáles son de geodatabase y cuáles son salidas o recursos publicados.
+            </div>
+        </section>
+
+        <section>
+            <h2>2. Resumen General de Paths</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Nombre lógico</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Path</th>
+                        <th>Estado / Revisión</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td>1</td>
+                        <td><strong>Entrada vuelos drone</strong></td>
+                        <td>Carpeta input</td>
+                        <td>Carpeta donde se dejan los vuelos drone sin procesar.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT</code>
+                        </td>
+                        <td><span class="status status-validar">Validar</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td><strong>Excel de parámetros</strong></td>
+                        <td>Archivo Excel</td>
+                        <td>Archivo base con parámetros generales del flujo.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Parametros_ALL_v3.xlsx</code>
+                        </td>
+                        <td><span class="status status-validar">Validar vigencia</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>
+                        <td><strong>Proyecto APRX Visor Territorial</strong></td>
+                        <td>ArcGIS Pro Project</td>
+                        <td>Proyecto APRX del Visor Territorial SIG PAO.</td>
+                        <td>
+                            <code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\01_Proyectos_ArcGIS\APRX\VISOR TERRITORIAL SIG PAO v7.aprx</code>
+                        </td>
+                        <td><span class="status status-base">Proyecto</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>4</td>
+                        <td><strong>GDB imágenes PAO</strong></td>
+                        <td>File Geodatabase</td>
+                        <td>Geodatabase destinada a imágenes PAO.</td>
+                        <td>
+                            <code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_Imagenes.gdb</code>
+                        </td>
+                        <td><span class="status status-base">GDB</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>5</td>
+                        <td><strong>GDB principal PAO v1</strong></td>
+                        <td>File Geodatabase</td>
+                        <td>Geodatabase principal del proyecto PAO.</td>
+                        <td>
+                            <code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb</code>
+                        </td>
+                        <td><span class="status status-base">GDB</span></td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>3. Feature Classes Principales</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Nombre lógico</th>
+                        <th>Dataset / Grupo</th>
+                        <th>Feature Class</th>
+                        <th>Uso esperado</th>
+                        <th>Path completo</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td>1</td>
+                        <td><strong>Imágenes oblicuas drone</strong></td>
+                        <td>CL_MLP_PAO_01_Imagenes_Oblicuas</td>
+                        <td>CL_MLP_PAO_Oblicuas_Drone_v2</td>
+                        <td>Capa de imágenes oblicuas capturadas por drone.</td>
+                        <td>
+                            <code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_Imagenes.gdb\CL_MLP_PAO_01_Imagenes_Oblicuas\CL_MLP_PAO_Oblicuas_Drone_v2</code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td><strong>Macrozonas PAO</strong></td>
+                        <td>CL_MLP_PAO_06_COMPLEMENTOS</td>
+                        <td>CL_MLP_PAO_ZONAS_Macrozonas_PO</td>
+                        <td>Capa de macrozonas usada como referencia espacial o filtro territorial.</td>
+                        <td>
+                            <code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_06_COMPLEMENTOS\CL_MLP_PAO_ZONAS_Macrozonas_PO</code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>
+                        <td><strong>Índice de vuelos PAO imágenes</strong></td>
+                        <td>CL_MLP_PAO_06_COMPLEMENTOS</td>
+                        <td>CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO</td>
+                        <td>Índice, diccionario o tabla maestra de vuelos PAO asociados a imágenes.</td>
+                        <td>
+                            <code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_06_COMPLEMENTOS\CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO</code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>4</td>
+                        <td><strong>Videos drone terreno</strong></td>
+                        <td>CL_MLP_PAO_07_IMAGENES_TERRENO</td>
+                        <td>MLP_SIG_PAO_Videos_Drone</td>
+                        <td>Capa de videos drone levantados en terreno.</td>
+                        <td>
+                            <code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_07_IMAGENES_TERRENO\MLP_SIG_PAO_Videos_Drone</code>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+
+            <div class="warning">
+                <strong>Observación:</strong> el path del índice de vuelos aparece repetido en la información original.
+                Se recomienda documentarlo una sola vez como capa de índice / diccionario de vuelos PAO.
+            </div>
+        </section>
+
+        <section>
+            <h2>4. Carpetas de Vuelos Drone por Zona</h2>
+
+            <p>
+                Estas carpetas parecen corresponder a vuelos organizados por zona y fecha.
+                La fecha identificada en los paths es <strong>26_06</strong>.
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Zona / Tramo</th>
+                        <th>Fecha carpeta</th>
+                        <th>Uso esperado</th>
+                        <th>Path</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td>1</td>
+                        <td><strong>Chacay</strong></td>
+                        <td>26_06</td>
+                        <td>Carpeta de vuelo drone del sector Chacay.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_Drone\26_06</code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td><strong>Chacay - El Mauro</strong></td>
+                        <td>26_06</td>
+                        <td>Carpeta de vuelo drone del tramo Chacay hacia El Mauro.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_06</code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>
+                        <td><strong>El Mauro</strong></td>
+                        <td>26_06</td>
+                        <td>Carpeta de vuelo drone del sector El Mauro.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_06</code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>4</td>
+                        <td><strong>El Mauro - Puerto Punta Chungo</strong></td>
+                        <td>26_06</td>
+                        <td>Carpeta de vuelo drone del tramo El Mauro hacia Puerto Punta Chungo.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Puerto_Punta_Chungo_Drone\26_06</code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>5</td>
+                        <td><strong>Puerto Punta Chungo</strong></td>
+                        <td>26_06</td>
+                        <td>Carpeta de vuelo drone del sector Puerto Punta Chungo.</td>
+                        <td>
+                            <code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Puerto_Punta_Chungo_Drone\26_06</code>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>5. Checklist para despejar el flujo</h2>
+
+            <ul class="checklist">
+                <li>
+                    Confirmar si el servidor principal de entrada es
+                    <strong>amssclgis10</strong> y el servidor principal de geodatabases es
+                    <strong>amssclgis08</strong>.
+                </li>
+                <li>
+                    Validar permisos de lectura sobre todas las carpetas de vuelos drone.
+                </li>
+                <li>
+                    Validar permisos de escritura en la carpeta de entrada:
+                    <strong>Vuelos_Drone_Sin_Procesar\INPUT</strong>.
+                </li>
+                <li>
+                    Confirmar si el Excel <strong>Parametros_ALL_v3.xlsx</strong> es el archivo vigente.
+                </li>
+                <li>
+                    Confirmar si el APRX vigente es
+                    <strong>VISOR TERRITORIAL SIG PAO v7.aprx</strong>.
+                </li>
+                <li>
+                    Confirmar si la capa de imágenes oblicuas vigente es
+                    <strong>CL_MLP_PAO_Oblicuas_Drone_v2</strong>.
+                </li>
+                <li>
+                    Confirmar si el índice de vuelos
+                    <strong>CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO</strong>
+                    funciona como diccionario, índice espacial o tabla maestra.
+                </li>
+                <li>
+                    Confirmar si la capa
+                    <strong>MLP_SIG_PAO_Videos_Drone</strong>
+                    está relacionada con los mismos vuelos o corresponde a otro flujo.
+                </li>
+                <li>
+                    Confirmar la lógica de nombres de carpetas por zona:
+                    <strong>Chacay, Chacay_El_Mauro, El_Mauro, El_Mauro_Puerto_Punta_Chungo,
+                        Puerto_Punta_Chungo</strong>.
+                </li>
+                <li>
+                    Confirmar si <strong>26_06</strong> corresponde a fecha de vuelo, fecha de proceso o lote operativo.
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>6. Preguntas para la persona encargada del flujo</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Pregunta</th>
+                        <th>Respuesta / Observación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>¿Dónde se dejan inicialmente las imágenes o vuelos sin procesar?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>¿Qué estructura debe tener cada carpeta de vuelo?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>¿El Excel de parámetros controla zonas, vuelos, fechas o nombres de capas?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>¿Qué campos del Excel son obligatorios para cargar imágenes?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>¿Qué capa se actualiza primero: índice de vuelos, imágenes oblicuas o videos?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>¿Las imágenes se cargan manualmente desde ArcGIS Pro o mediante script?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>¿El APRX contiene modelos, layouts, conexiones o simbología oficial?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>¿Existe publicación hacia Portal, Image Server, Feature Layer o Web Map?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>¿Qué usuario o cuenta de servicio ejecuta el proceso?</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>¿Qué validaciones se realizan antes de mover o cargar imágenes?</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>7. Observaciones Técnicas</h2>
+
+            <ul>
+                <li>
+                    Las rutas UNC deben mantener la estructura:
+                    <strong>\\servidor\carpeta\subcarpeta</strong>.
+                </li>
+                <li>
+                    Las rutas hacia una Feature Class dentro de una File Geodatabase deben incluir:
+                    <strong>GDB + Dataset + Feature Class</strong>, cuando aplique.
+                </li>
+                <li>
+                    Se debe validar si cada ruta es de:
+                    <strong>entrada, proceso, almacenamiento, publicación o respaldo</strong>.
+                </li>
+                <li>
+                    Si el proceso se ejecuta desde servidor o tarea programada, se debe confirmar que el usuario de
+                    ejecución tenga acceso a:
+                    <strong>amssclgis08</strong> y <strong>amssclgis10</strong>.
+                </li>
+                <li>
+                    Se recomienda confirmar si existen rutas históricas, rutas vigentes y rutas de producción para no
+                    mezclar ambientes.
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>8. Matriz de Validación Manual</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Elemento</th>
+                        <th>¿Existe?</th>
+                        <th>¿Tengo acceso?</th>
+                        <th>¿Es vigente?</th>
+                        <th>Responsable</th>
+                        <th>Observación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Carpeta input vuelos drone</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Excel Parametros_ALL_v3.xlsx</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>APRX Visor Territorial SIG PAO v7</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>GDB CL_MLP_PAO_Imagenes.gdb</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>GDB CL_MLP_PAO_v1.gdb</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Feature Class imágenes oblicuas</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Feature Class macrozonas</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Feature Class índice de vuelos imágenes</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Feature Class videos drone</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <div class="footer">
+            Documento técnico de apoyo para revisión de flujo de paths - CL_MLP_PAO.
+        </div>
+
+    </main>
+
+</body>
+
+</html>
