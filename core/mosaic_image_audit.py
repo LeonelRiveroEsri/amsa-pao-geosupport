@@ -294,6 +294,82 @@ def arcpy_table_to_dataframe(dataset_path: str, max_rows: int | None = None) -> 
     return pd.DataFrame(rows), fields_df
 
 
+def arcpy_table_fields_to_dataframe(table_path: str) -> pd.DataFrame:
+    import arcpy
+
+    return pd.DataFrame(
+        [
+            {
+                "name": field.name,
+                "alias": field.aliasName,
+                "type": field.type,
+                "length": field.length,
+                "required": field.required,
+                "nullable": field.isNullable,
+            }
+            for field in arcpy.ListFields(table_path)
+            if field.type not in ("Geometry", "Raster", "Blob")
+        ]
+    )
+
+
+def arcpy_table_rows_to_dataframe(table_path: str, max_rows: int | None = None) -> pd.DataFrame:
+    import arcpy
+
+    field_names = [
+        field.name
+        for field in arcpy.ListFields(table_path)
+        if field.type not in ("Geometry", "Raster", "Blob")
+    ]
+
+    rows = []
+    with arcpy.da.SearchCursor(table_path, field_names) as cursor:
+        for index, values in enumerate(cursor):
+            if max_rows is not None and index >= max_rows:
+                break
+            rows.append(dict(zip(field_names, values)))
+
+    return pd.DataFrame(rows)
+
+
+def export_mosaic_dataset_paths_to_dataframe(
+    mosaic_dataset_path: str,
+    output_workspace: str | Path | None = None,
+    output_table_name: str | None = None,
+    max_rows: int | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, str]:
+    """Exporta los paths reales del mosaic dataset y retorna la tabla como DataFrame.
+
+    Esta es la fuente de control para comparar contra los nombres esperados,
+    porque refleja el nombre/ruta final despues de la carga manual al mosaico.
+    """
+    import arcpy
+
+    if output_workspace is None:
+        scratch_gdb = getattr(arcpy.env, "scratchGDB", None)
+        if scratch_gdb:
+            output_workspace = scratch_gdb
+        else:
+            scratch_root = Path.cwd() / "outputs" / "arcpy_scratch"
+            scratch_root.mkdir(parents=True, exist_ok=True)
+            output_workspace = scratch_root / "mosaic_audit_scratch.gdb"
+            if not arcpy.Exists(str(output_workspace)):
+                arcpy.management.CreateFileGDB(str(scratch_root), output_workspace.name)
+
+    output_workspace = str(output_workspace)
+    output_table_name = output_table_name or f"mosaic_paths_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    output_table = str(Path(output_workspace) / output_table_name)
+
+    if arcpy.Exists(output_table):
+        arcpy.management.Delete(output_table)
+
+    arcpy.management.ExportMosaicDatasetPaths(mosaic_dataset_path, output_table)
+
+    paths_df = arcpy_table_rows_to_dataframe(output_table, max_rows=max_rows)
+    fields_df = arcpy_table_fields_to_dataframe(output_table)
+    return paths_df, fields_df, output_table
+
+
 def detect_candidate_path_fields(fields_df: pd.DataFrame) -> list[str]:
     tokens = ("path", "uri", "url", "file", "name", "source", "raster")
     candidate_fields = []
