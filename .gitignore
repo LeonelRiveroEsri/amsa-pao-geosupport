@@ -1,5 +1,4 @@
 mmpk/*.mmpk
 excel/~$*.xlsx
-outputs/
-*.sqlite
+
 
