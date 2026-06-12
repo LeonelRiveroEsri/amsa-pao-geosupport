@@ -1,0 +1,31 @@
+﻿name,alias,type,length,required,editable
+OBJECTID,OBJECTID,OID,4,True,False
+Name,Name,String,200,False,True
+MinPS,MinPS,Double,8,True,True
+MaxPS,MaxPS,Double,8,True,True
+LowPS,LowPS,Double,8,True,True
+HighPS,HighPS,Double,8,True,True
+Category,Category,Integer,4,True,True
+Tag,Tag,String,100,False,True
+GroupName,GroupName,String,100,False,True
+ProductName,ProductName,String,100,False,True
+CenterX,CenterX,Double,8,True,True
+CenterY,CenterY,Double,8,True,True
+ZOrder,ZOrder,Integer,4,True,True
+TypeID,Raster Type ID,Integer,4,True,True
+ItemTS,ItemTS,Double,8,True,True
+UriHash,UriHash,String,50,True,True
+Uri,Uri,Blob,0,True,True
+Shape,Shape,Geometry,8,True,True
+Raster,Raster,Raster,8,True,True
+Sector,Sector,String,100,False,True
+Sensor,Sensor,String,100,False,True
+Proyecto,Proyecto,String,100,False,True
+FechaAdqui,Fecha Adquisición,Date,8,False,True
+FechaCarga,Fecha Carga,Date,8,False,True
+Estado,Estado,String,50,False,True
+URL,URL,String,500,False,True
+Thumbnail,Thumbnail,Blob,0,True,True
+NombreVuelo,NombreVuelo,String,255,False,True
+Shape.STArea(),Shape.STArea(),Double,0,True,False
+Shape.STLength(),Shape.STLength(),Double,0,True,False
