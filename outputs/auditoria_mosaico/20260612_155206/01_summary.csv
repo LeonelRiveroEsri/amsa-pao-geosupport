@@ -1,0 +1,23 @@
+﻿metric,value
+run_timestamp,20260612_155206
+input_root,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT
+client_control_subfolder,20260206_Geosupport_primera entrega
+mosaic_dataset,\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\01_Proyectos_ArcGIS\APRX\CL MLP PAO Aereo Image Server_v2\SQLServer-amssclgis06_ArcGIS-Aereo.sde\OWD.CL_MLP_PAO_IF_Ortho_Geosupport
+input_images_count,1999
+root_ortho_tif_count,66
+control_ortho_tif_count,33
+exported_mosaic_paths_table,C:\Users\ESRLRI~1\AppData\Local\Temp\scratch.gdb\mosaic_paths_20260612_155211
+mosaic_exported_paths_count,926
+mosaic_inventory_count,914
+script_new_count_all_root,34
+script_new_count_inside_control,13
+high_confidence_new_inside_control,5
+same_date_review_inside_control,8
+review_or_discard_inside_control,20
+load_status_nueva_candidata,34
+load_status_sin_fecha,23
+load_status_descartar_posible_plano,9
+control_triage_revisar_fecha_o_nombre,11
+control_triage_descartar_posible_plano,9
+control_triage_revisar_fecha_existente_en_mosaico,8
+control_triage_nueva_alta_confianza,5

@@ -1,0 +1,4 @@
+﻿name,alias,type,length,required,nullable
+OID,OID,OID,4,True,False
+SourceOID,SourceOID,Integer,4,False,True
+Path,Path,String,256,False,True
