@@ -14,6 +14,7 @@ ORTHO_MOSAIC_EXTENSIONS = {".tif", ".tiff"}
 IMAGE_EXTENSIONS = ORTHO_MOSAIC_EXTENSIONS | {".jpg", ".jpeg", ".png", ".sid", ".jp2", ".ecw"}
 RENAME_PREFIX = "CL_MLP_PAO_IF_Ortho"
 DEFAULT_RENAMED_EXTENSION = ".tif"
+AUDIT_LOGIC_VERSION = "2026-06-12-parser-fix-export-mosaic-paths"
 
 SECTOR_ALIASES = {
     "ESTACION DE BOMBEO N 1": "estacion_de_bombeo_no1",

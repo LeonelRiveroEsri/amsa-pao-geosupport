@@ -1,4 +1,9 @@
 mmpk/*.mmpk
 excel/~$*.xlsx
+outputs/
+*.sqlite
+__pycache__/
+*.pyc
+*.pyc.*
 
 
