@@ -78,7 +78,7 @@ def extract_date_token_from_filename(file_name: str) -> dict | None:
     stem_without_id = re.sub(r"^GEOSP[-_ ]?TRN[-_ ]?\d+", "", stem, flags=re.IGNORECASE)
 
     patterns = [
-        r"(?<!\d)(?P<day>\d{1,2})[-_](?P<month>\d{1,2})[-_](?P<year>20\d{2}|\d{2})(?!\d)",
+        r"(?<![A-Za-z0-9])(?P<day>\d{2})[-_](?P<month>\d{2})[-_](?P<year>20\d{2}|\d{2})(?!\d)",
         r"(?<!\d)(?P<day>\d{2})(?P<month>\d{2})(?P<year>\d{2})(?!\d)",
         r"(?<!\d)(?P<year>20\d{2})(?P<month>\d{2})(?P<day>\d{2})(?!\d)",
     ]
@@ -123,24 +123,24 @@ def extract_sector_candidates_from_filename(file_name: str, date_match: dict | N
     cleanup_patterns = [
         r"^GEOSP[-_ ]?TRN[-_ ]?\d+",
         r"^SIN[-_ ]?ID",
-        r"\bGS\b",
-        r"\bGD\b",
-        r"\bORTOFOTO\b",
-        r"\bORTHOMOSAIC\b",
-        r"\bORTOMOSAICO\b",
-        r"\bCORTADA\b",
-        r"\bCOMPLETA\b",
-        r"\bDRONE\b",
-        r"\bPAO\b",
+        r"(?<![A-Z0-9])GS(?![A-Z0-9])",
+        r"(?<![A-Z0-9])GD(?![A-Z0-9])",
+        r"(?<![A-Z0-9])ORTOFOTO(?![A-Z0-9])",
+        r"(?<![A-Z0-9])ORTHOMOSAIC(?![A-Z0-9])",
+        r"(?<![A-Z0-9])ORTOMOSAICO(?![A-Z0-9])",
+        r"(?<![A-Z0-9])CORTADA(?![A-Z0-9])",
+        r"(?<![A-Z0-9])COMPLETA(?![A-Z0-9])",
+        r"(?<![A-Z0-9])DRONE(?![A-Z0-9])",
+        r"(?<![A-Z0-9])PAO(?![A-Z0-9])",
         r"\(.*?\)",
-        r"\bPRIORIDAD\b\s*\d+",
+        r"(?<![A-Z0-9])PRIORIDAD(?![A-Z0-9])\s*\d+",
     ]
 
     working = strip_accents(working).upper()
+    working = re.sub(r"[-_]+", " ", working)
     for pattern in cleanup_patterns:
         working = re.sub(pattern, " ", working, flags=re.IGNORECASE)
 
-    working = re.sub(r"[-_]+", " ", working)
     working = re.sub(r"\s+", " ", working).strip()
     if not working:
         return []
