@@ -1,0 +1,18 @@
+﻿metric,value
+run_timestamp,20260612_141816
+input_base_folder,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT
+input_delivery_folder,20260206_Geosupport_primera entrega
+input_scan_folder,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT\20260206_Geosupport_primera entrega
+mosaic_dataset,\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\01_Proyectos_ArcGIS\APRX\CL MLP PAO Aereo Image Server_v2\SQLServer-amssclgis06_ArcGIS-Aereo.sde\OWD.CL_MLP_PAO_IF_Ortho_Geosupport
+input_images_count,607
+ortho_input_images_count,33
+non_ortho_input_images_count,574
+mosaic_inventory_count,2442
+expected_names_count,33
+comparison_count,33
+probable_new_tifs_count,17
+review_or_discard_tifs_count,15
+load_status_nueva_candidata,17
+load_status_descartar_posible_plano,9
+load_status_sin_fecha,6
+load_status_ya_cargada,1
