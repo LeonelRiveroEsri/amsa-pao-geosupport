@@ -1,3 +1,2 @@
 mmpk/*.mmpk
-input/*
-!input/.gitkeep
+excel/~$*.xlsx
