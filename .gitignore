@@ -1,1 +1,3 @@
 mmpk/*.mmpk
+input/*
+!input/.gitkeep
