@@ -14,7 +14,7 @@ ORTHO_MOSAIC_EXTENSIONS = {".tif", ".tiff"}
 IMAGE_EXTENSIONS = ORTHO_MOSAIC_EXTENSIONS | {".jpg", ".jpeg", ".png", ".sid", ".jp2", ".ecw"}
 RENAME_PREFIX = "CL_MLP_PAO_IF_Ortho"
 DEFAULT_RENAMED_EXTENSION = ".tif"
-AUDIT_LOGIC_VERSION = "2026-06-15-spatial-sector-only"
+AUDIT_LOGIC_VERSION = "2026-06-15-spatial-sector-preserve-token"
 
 SECTOR_ALIASES = {
     "ESTACION DE BOMBEO N 1": "estacion_de_bombeo_no1",
@@ -71,6 +71,16 @@ def format_sector_token(value) -> str | None:
 
     sector_token = normalized.lower().replace(" ", "_")
     return SECTOR_OUTPUT_ALIASES.get(sector_token, sector_token)
+
+
+def format_spatial_sector_token(value) -> str | None:
+    """Preserva el nombre del sector del feature class y reemplaza espacios por guion bajo."""
+    if value is None or pd.isna(value):
+        return None
+
+    sector_token = str(value).strip()
+    sector_token = re.sub(r"\s+", "_", sector_token)
+    return sector_token or None
 
 
 def is_valid_date_parts(year: int, month: int, day: int) -> bool:
@@ -258,7 +268,7 @@ def build_expected_image_name_from_date_sector(
             "sector_source": "spatial_sector",
         }
 
-    sector = format_sector_token(sector_value)
+    sector = format_spatial_sector_token(sector_value)
     if not sector:
         return {
             "expected_name": None,
@@ -353,6 +363,15 @@ def build_expected_image_name_from_spatial_result(
 def scan_input_images(input_folder: str | Path, extensions: Iterable[str] = IMAGE_EXTENSIONS) -> pd.DataFrame:
     input_folder = Path(input_folder)
     extensions = {ext.lower() for ext in extensions}
+    columns = [
+        "file_name",
+        "stem",
+        "extension",
+        "path",
+        "relative_path",
+        "size_mb",
+        "modified_at",
+    ]
 
     if not input_folder.exists():
         raise FileNotFoundError(f"No existe la carpeta input: {input_folder}")
@@ -463,7 +482,7 @@ def arcpy_table_rows_to_dataframe(table_path: str, max_rows: int | None = None) 
                 break
             rows.append(dict(zip(field_names, values)))
 
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=columns)
 
 
 def _extent_to_polygon(extent, spatial_reference):
@@ -481,7 +500,11 @@ def _extent_to_polygon(extent, spatial_reference):
     return arcpy.Polygon(points, spatial_reference)
 
 
-def load_sector_polygons(index_fc: str, sector_field: str = "Sector") -> tuple[list[dict], object]:
+def load_sector_polygons(
+    index_fc: str,
+    sector_field: str = "Sector",
+    where_clause: str | None = None,
+) -> tuple[list[dict], object]:
     import arcpy
 
     field_names = {field.name.lower(): field.name for field in arcpy.ListFields(index_fc)}
@@ -492,7 +515,7 @@ def load_sector_polygons(index_fc: str, sector_field: str = "Sector") -> tuple[l
     spatial_reference = arcpy.Describe(index_fc).spatialReference
     polygons = []
 
-    with arcpy.da.SearchCursor(index_fc, [resolved_sector_field, "SHAPE@"]) as cursor:
+    with arcpy.da.SearchCursor(index_fc, [resolved_sector_field, "SHAPE@"], where_clause) as cursor:
         for sector_value, geometry in cursor:
             if geometry is None or sector_value in (None, ""):
                 continue
@@ -500,7 +523,7 @@ def load_sector_polygons(index_fc: str, sector_field: str = "Sector") -> tuple[l
                 {
                     "sector_field": resolved_sector_field,
                     "sector_raw": sector_value,
-                    "sector_token": format_sector_token(sector_value),
+                    "sector_token": format_spatial_sector_token(sector_value),
                     "geometry": geometry,
                     "area": geometry.area,
                 }
@@ -513,10 +536,27 @@ def calculate_spatial_sector_matches(
     images_df: pd.DataFrame,
     index_fc: str,
     sector_field: str = "Sector",
+    where_clause: str | None = None,
 ) -> pd.DataFrame:
     import arcpy
 
-    sector_polygons, target_spatial_reference = load_sector_polygons(index_fc, sector_field=sector_field)
+    columns = [
+        "file_name",
+        "path",
+        "spatial_status",
+        "spatial_sector_raw",
+        "spatial_sector",
+        "spatial_overlap_area",
+        "spatial_overlap_pct",
+        "spatial_overlap_count",
+        "spatial_all_matches",
+        "spatial_error",
+    ]
+    sector_polygons, target_spatial_reference = load_sector_polygons(
+        index_fc,
+        sector_field=sector_field,
+        where_clause=where_clause,
+    )
     rows = []
 
     for _, image_row in images_df.iterrows():
@@ -618,7 +658,7 @@ def calculate_spatial_sector_matches(
                 }
             )
 
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=columns)
 
 
 def add_expected_names_with_spatial_sector(
