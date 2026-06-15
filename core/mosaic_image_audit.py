@@ -701,6 +701,40 @@ def add_expected_names_with_spatial_sector(
     return pd.concat([merged_df.reset_index(drop=True), expected_df], axis=1)
 
 
+def resolve_duplicate_expected_names(expected_df: pd.DataFrame) -> pd.DataFrame:
+    """Agrega sufijos -1, -2, ... cuando el nombre esperado se repite."""
+    result = expected_df.copy()
+    for column in ["expected_name", "expected_file_name", "expected_stem"]:
+        result[f"original_{column}"] = result[column] if column in result.columns else None
+
+    result["duplicate_expected_file_name"] = (
+        result["expected_file_name"].notna()
+        & result.duplicated("expected_file_name", keep=False)
+    )
+    result["duplicate_sequence"] = pd.Series(dtype="Int64")
+    result["duplicate_was_resolved"] = False
+
+    duplicate_groups = result[result["duplicate_expected_file_name"]].groupby("expected_file_name", sort=False)
+    for _, group in duplicate_groups:
+        for sequence, row_index in enumerate(group.index, start=1):
+            suffix = f"-{sequence}"
+            expected_file_name = result.at[row_index, "expected_file_name"]
+            expected_name = result.at[row_index, "expected_name"]
+            expected_stem = result.at[row_index, "expected_stem"]
+
+            file_suffix = Path(str(expected_file_name)).suffix or DEFAULT_RENAMED_EXTENSION
+            new_stem = f"{expected_stem or expected_name}{suffix}"
+
+            result.at[row_index, "expected_name"] = f"{expected_name}{suffix}" if expected_name else None
+            result.at[row_index, "expected_stem"] = new_stem
+            result.at[row_index, "expected_file_name"] = f"{new_stem}{file_suffix}"
+            result.at[row_index, "expected_stem_candidates"] = new_stem
+            result.at[row_index, "duplicate_sequence"] = sequence
+            result.at[row_index, "duplicate_was_resolved"] = True
+
+    return result
+
+
 def export_mosaic_dataset_paths_to_dataframe(
     mosaic_dataset_path: str,
     output_workspace: str | Path | None = None,
