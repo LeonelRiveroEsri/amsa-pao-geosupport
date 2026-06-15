@@ -25,6 +25,10 @@ SECTOR_ALIASES = {
     "SUBESTACION EL MAURO PRIORIDAD 1": "subestacion_el_mauro",
 }
 
+SECTOR_OUTPUT_ALIASES = {
+    "estacion_cabecera": "Estacion_Cabecera",
+}
+
 
 def strip_accents(value) -> str:
     value = unicodedata.normalize("NFKD", str(value))
@@ -61,9 +65,11 @@ def format_sector_token(value) -> str | None:
 
     alias_key = normalized.upper()
     if alias_key in SECTOR_ALIASES:
-        return SECTOR_ALIASES[alias_key]
+        sector_token = SECTOR_ALIASES[alias_key]
+        return SECTOR_OUTPUT_ALIASES.get(sector_token, sector_token)
 
-    return normalized.lower().replace(" ", "_")
+    sector_token = normalized.lower().replace(" ", "_")
+    return SECTOR_OUTPUT_ALIASES.get(sector_token, sector_token)
 
 
 def is_valid_date_parts(year: int, month: int, day: int) -> bool:
