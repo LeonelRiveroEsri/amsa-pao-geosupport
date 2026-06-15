@@ -1,0 +1,110 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reporte de preparacion para datastore - PAO</title>
+  <style>
+    :root { --bg:#f6f8fb; --panel:#fff; --text:#172033; --muted:#5d6b82; --line:#dce3ee; --warn:#9a5b00; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:"Segoe UI", Arial, sans-serif; font-size:14px; line-height:1.45; }
+    main { max-width:1400px; margin:0 auto; padding:32px 24px 48px; }
+    header { margin-bottom:24px; border-bottom:1px solid var(--line); padding-bottom:18px; }
+    h1 { margin:0 0 6px; font-size:26px; font-weight:700; letter-spacing:0; }
+    h2 { margin:28px 0 12px; font-size:18px; letter-spacing:0; }
+    .subtitle, .small, .label { color:var(--muted); }
+    .grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin:18px 0 22px; }
+    .metric, .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; }
+    .panel { margin-bottom:16px; }
+    .metric strong { display:block; font-size:24px; margin-bottom:4px; }
+    .paths { display:grid; grid-template-columns:180px minmax(0,1fr); gap:8px 14px; }
+    .label { font-weight:600; }
+    code { font-family:Consolas,"Courier New",monospace; word-break:break-all; color:#1f365f; }
+    table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+    th, td { border-bottom:1px solid var(--line); padding:9px 10px; text-align:left; vertical-align:top; }
+    th { background:#edf2f8; font-weight:700; color:#25324a; }
+    tr:last-child td { border-bottom:0; }
+    .status-warn { color:var(--warn); font-weight:700; }
+    .small { font-size:12px; }
+    .nowrap { white-space:nowrap; }
+    @media (max-width:900px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .paths { grid-template-columns:1fr; } table { font-size:12px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Reporte de preparacion para datastore</h1>
+    <p class="subtitle">Ejecucion 20260615_144948 | Generado el 2026-06-15</p>
+  </header>
+
+  <section class="panel">
+    <div class="paths">
+      <div class="label">Entrada</div><div><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT\20260519_Geosupport</code></div>
+      <div class="label">CSV de carga</div><div><code>outputs\preparacion_carga_mosaico\20260615_144948\04_ready_for_datastore.csv</code></div>
+      <div class="label">Destino raiz</div><div><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO</code></div>
+      <div class="label">Estructura destino</div><div><code>raiz\carpeta_operativa\YY_MM\nombre_archivo.tif</code></div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="metric"><strong>1392</strong><span>archivos detectados</span></div>
+    <div class="metric"><strong>33</strong><span>imagenes TIF evaluadas</span></div>
+    <div class="metric"><strong>32</strong><span>imagenes listas para datastore</span></div>
+    <div class="metric"><strong></strong><span>imagen pendiente</span></div>
+    <div class="metric"><strong>16.95 GB</strong><span>volumen aproximado a transferir</span></div>
+  </section>
+
+  <section class="panel">
+    <h2>Resultado General</h2>
+    <p>Se prepararon <strong>32 imagenes</strong> para pasar al datastore con carpeta operativa y path destino completo. En <strong>10 casos</strong> se aplico una secuencia al final del nombre para evitar repeticiones (<code>-1</code>, <code>-2</code>). Queda <strong> imagen pendiente</strong> fuera del lote de carga.</p>
+  </section>
+
+  <h2>Imagenes Que Se Pasan Al Datastore</h2>
+  <table>
+    <thead><tr><th>#</th><th>Archivo de entrada</th><th>Nombre de salida</th><th>Carpeta operativa</th><th>Path destino completo</th><th>Mes</th><th>MB</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>SOLO_TIF_19May26\GEOSP-TRN-002511_GS_Ortofoto Estaci&#243;n Cabeceras (EC)_01_05_26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_01_Estacion_Cabecera.tif</code></td><td>Chacay_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_01_Estacion_Cabecera.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>79.159</td><td></td></tr>
+      <tr><td>2</td><td>SOLO_TIF_19May26\GEOSP-TRN-002545_GS_ORTOFOTO_EB3_06-05-26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_06_Subestacion-El-Mauro-1.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_06_Subestacion-El-Mauro-1.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>11.012</td><td>Secuencia aplicada</td></tr>
+      <tr><td>3</td><td>SOLO_TIF_19May26\GEOSP-TRN-002546_GS_ORTOFOTO_SSEE_06-05-26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_06_Subestacion-El-Mauro-2.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_06_Subestacion-El-Mauro-2.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>762.001</td><td>Secuencia aplicada</td></tr>
+      <tr><td>4</td><td>SOLO_TIF_19May26\GEOSP-TRN-002555_GS_Ortofoto_Tramo 2 L&#237;nea 33 kV E-085 – E-125_06-05-26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_06_TORRE_E85_A_E_125.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_06_TORRE_E85_A_E_125.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>640.965</td><td></td></tr>
+      <tr><td>5</td><td>SOLO_TIF_19May26\GEOSP-TRN-002591_GS_Ortofoto ED1_10-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_10_ED1.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_10_ED1.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>63.628</td><td></td></tr>
+      <tr><td>6</td><td>SOLO_TIF_19May26\GEOSP-TRN-002592_GS_Ortofoto_Helipuerto Mauro MLP_10-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_10_Helipuerto.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_10_Helipuerto.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>102.047</td><td></td></tr>
+      <tr><td>7</td><td>SOLO_TIF_19May26\GEOSP-TRN-002593_GS_ORTOFOTO_PATIO 19B_10-05-26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_10_Patio-19B-y-Armado.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_10_Patio-19B-y-Armado.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>156.844</td><td></td></tr>
+      <tr><td>8</td><td>SOLO_TIF_19May26\GEOSP-TRN-002603_ORTOFOTO_CORTADA_EM2_100526.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_10_DME9-PA12-IIFF8.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_10_DME9-PA12-IIFF8.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>71.19</td><td></td></tr>
+      <tr><td>9</td><td>SOLO_TIF_19May26\GEOSP-TRN-002604_GS_Ortofoto_Tramo 2 L&#237;nea 33 kV E-048 – E-084_07-05-26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_07_TORRES_E48_A_E84_PV4.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_07_TORRES_E48_A_E84_PV4.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>3217.563</td><td></td></tr>
+      <tr><td>10</td><td>SOLO_TIF_19May26\GEOSP-TRN-002606_GS_Ortofoto_Tramo 1 L&#237;nea 33 kV E-125 – ML EB2_10-05-26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_10_MonteAranda-NSTC-Km-84p2-a-82p3.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_10_MonteAranda-NSTC-Km-84p2-a-82p3.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>264.282</td><td></td></tr>
+      <tr><td>11</td><td>SOLO_TIF_19May26\GEOSP-TRN-002615_GS_ORTOFOTO_ESTACION DE MONITOREO N&#176;2_13-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_13_DME9-PA12-IIFF8.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_13_DME9-PA12-IIFF8.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>531.553</td><td></td></tr>
+      <tr><td>12</td><td>SOLO_TIF_19May26\GEOSP-TRN-002616_GS_ORTOFOTO_ACCESO POZOS PRP_130526.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_13_Subestacion-El-Mauro_A_E35.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_13_Subestacion-El-Mauro_A_E35.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>399.55</td><td></td></tr>
+      <tr><td>13</td><td>SOLO_TIF_19May26\GEOSP-TRN-002617_GS_ORTOFOTO_SUBESTACION_EL MAURO_PRIORIDAD 1_13_05_26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_13_Subestacion-El-Mauro-1.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_13_Subestacion-El-Mauro-1.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>954.304</td><td>Secuencia aplicada</td></tr>
+      <tr><td>14</td><td>SOLO_TIF_19May26\GEOSP-TRN-002618_GS_ORTOFOTO_EM2-2_13-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_13_EM2_S2.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_13_EM2_S2.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>156.937</td><td></td></tr>
+      <tr><td>15</td><td>SOLO_TIF_19May26\GEOSP-TRN-002619_GS_ORTOFOTO_EBD_130526.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_13_EBD-1.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_13_EBD-1.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>213.754</td><td>Secuencia aplicada</td></tr>
+      <tr><td>16</td><td>SOLO_TIF_19May26\GEOSP-TRN-002620_GS_ORTOFOTO_ED2_13-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_13_ED2.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_13_ED2.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>820.834</td><td></td></tr>
+      <tr><td>17</td><td>SOLO_TIF_19May26\GEOSP-TRN-002621_GS_ORTOFOTO_ESTACION DE BOMBEO N&#186;3_13_05_26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_13_Subestacion-El-Mauro-2.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_13_Subestacion-El-Mauro-2.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>56.175</td><td>Secuencia aplicada</td></tr>
+      <tr><td>18</td><td>SOLO_TIF_19May26\GEOSP-TRN-002622_GS_ORTOFOTO_POZOS PRP_130526.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_13_EBD-2.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_13_EBD-2.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>29.052</td><td>Secuencia aplicada</td></tr>
+      <tr><td>19</td><td>SOLO_TIF_19May26\GEOSP-TRN-002623_GS_ORTOFOTO_ESTACI&#211;N INTERMEDIA 3_13-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_13_Estacion_Intermedia.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_13_Estacion_Intermedia.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>1813.409</td><td></td></tr>
+      <tr><td>20</td><td>SOLO_TIF_19May26\GEOSP-TRN-002627_GS_ORTOFOTO_EM3_14-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_14_EM3.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_14_EM3.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>1021.143</td><td></td></tr>
+      <tr><td>21</td><td>SOLO_TIF_19May26\GEOSP-TRN-002629_GS_ORTOFOTO_Camino alternativo Salamanca_ (Prioridad 22)_14_05_26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_14_Camino_Alternativo_Salamanca.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_14_Camino_Alternativo_Salamanca.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>56.639</td><td></td></tr>
+      <tr><td>22</td><td>SOLO_TIF_19May26\GEOSP-TRN-002630_GD_ORTOFOTO_Tramo 2 linea 22 KV E-35 - E48_14-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_14_TORRES_E31_A_E48_PV4-1.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_14_TORRES_E31_A_E48_PV4-1.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>650.561</td><td>Secuencia aplicada</td></tr>
+      <tr><td>23</td><td>SOLO_TIF_19May26\GEOSP-TRN-002631_GS_ORTOFOTO_EM4_14-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_14_Subestacion-El-Mauro_A_E35.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_14_Subestacion-El-Mauro_A_E35.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>2073.665</td><td></td></tr>
+      <tr><td>24</td><td>SOLO_TIF_19May26\GEOSP-TRN-002635_GS_ORTOFOTO_HELIPUERTO MAURO_150526.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_15_Helipuerto-1.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_15_Helipuerto-1.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>85.96</td><td>Secuencia aplicada</td></tr>
+      <tr><td>25</td><td>SOLO_TIF_19May26\GEOSP-TRN-002636_GS_ORTOFOTO_HELIPUERTO MAURO_150526.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_15_Helipuerto-2.tif</code></td><td>El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_15_Helipuerto-2.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>85.96</td><td>Secuencia aplicada</td></tr>
+      <tr><td>26</td><td>SOLO_TIF_19May26\GEOSP-TRN-002642_GS_ORTOFOTO_EV1_15-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_15_EV1.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_15_EV1.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>721.83</td><td></td></tr>
+      <tr><td>27</td><td>SOLO_TIF_19May26\GEOSP-TRN-002643_GS_Ortofoto_Estacion Cabecera (Prioridad 25)_15_05_26.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_15_Estacion_Cabecera.tif</code></td><td>Chacay_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_15_Estacion_Cabecera.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>88.752</td><td></td></tr>
+      <tr><td>28</td><td>SOLO_TIF_19May26\GEOSP-TRN-002647_GS_ORTOFOTO_TORRES E48 A E84_16-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_16_TORRES_E48_A_E84_PV4.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_16_TORRES_E48_A_E84_PV4.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>1225.743</td><td></td></tr>
+      <tr><td>29</td><td>SOLO_TIF_19May26\GEOSP-TRN-002652_GS_ORTOFOTO_EV2_170526.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_17_EV2.tif</code></td><td>El_Mauro_Puerto_Punta_Chungo_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\El_Mauro_Puerto_Punta_Chungo_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_17_EV2.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>190.375</td><td></td></tr>
+      <tr><td>30</td><td>SOLO_TIF_19May26\GEOSP-TRN-002655_GS_ORTOFOTO_EDT_17-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_17_EDT.tif</code></td><td>Puerto_Punta_Chungo_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Puerto_Punta_Chungo_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_17_EDT.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>21.961</td><td></td></tr>
+      <tr><td>31</td><td>SOLO_TIF_19May26\GEOSP-TRN-002656_GD_ORTOFOTO_Tramo 2 linea 22 KV E-35 - E48_14-05-2026.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_14_TORRES_E31_A_E48_PV4-2.tif</code></td><td>Chacay_El_Mauro_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_14_TORRES_E31_A_E48_PV4-2.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>650.561</td><td>Secuencia aplicada</td></tr>
+      <tr><td>32</td><td>SOLO_TIF_19May26\GEOSP-TRN-002660_GS_ORTOFOTO_EM1_150526.tif</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_15_EM1.tif</code></td><td>Chacay_Drone</td><td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_15_EM1.tif</code></td><td class='nowrap'>26_05</td><td class='nowrap'>138.719</td><td></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Pendiente</h2>
+  <table>
+    <thead><tr><th>Archivo</th><th>Motivo general</th></tr></thead>
+    <tbody><tr><td colspan='2'>No hay imagenes pendientes.</td></tr></tbody>
+  </table>
+
+  <p class="small">Este reporte resume la preparacion de archivos para datastore. No incluye detalles tecnicos del proceso de evaluacion.</p>
+</main>
+</body>
+</html>
