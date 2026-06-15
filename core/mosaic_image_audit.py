@@ -27,6 +27,7 @@ SECTOR_ALIASES = {
 
 SECTOR_OUTPUT_ALIASES = {
     "estacion_cabecera": "Estacion_Cabecera",
+    "estacion_cabeceras": "Estacion_Cabecera",
 }
 
 
