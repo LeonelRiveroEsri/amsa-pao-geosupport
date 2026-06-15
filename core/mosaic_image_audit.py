@@ -224,6 +224,61 @@ def build_expected_image_name(file_name: str, output_extension: str = DEFAULT_RE
     }
 
 
+def build_expected_image_name_from_date_sector(
+    file_name: str,
+    sector_value,
+    output_extension: str = DEFAULT_RENAMED_EXTENSION,
+) -> dict:
+    if re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE):
+        result = build_expected_image_name(file_name, output_extension=output_extension)
+        result["sector_source"] = "descartar_posible_plano"
+        return result
+
+    date_match = extract_date_token_from_filename(file_name)
+    if not date_match:
+        return {
+            "expected_name": None,
+            "expected_file_name": None,
+            "expected_stem": None,
+            "expected_date_token": None,
+            "expected_sector": None,
+            "expected_sector_candidates": None,
+            "expected_stem_candidates": None,
+            "date_warning": None,
+            "rename_status": "sin_fecha",
+            "sector_source": "spatial_sector",
+        }
+
+    sector = format_sector_token(sector_value)
+    if not sector:
+        return {
+            "expected_name": None,
+            "expected_file_name": None,
+            "expected_stem": None,
+            "expected_date_token": date_match["date_token"],
+            "expected_sector": None,
+            "expected_sector_candidates": None,
+            "expected_stem_candidates": None,
+            "date_warning": date_match.get("date_warning"),
+            "rename_status": "sin_sector",
+            "sector_source": "spatial_sector",
+        }
+
+    expected_stem = f"{RENAME_PREFIX}_{date_match['date_token']}_{sector}"
+    return {
+        "expected_name": expected_stem,
+        "expected_file_name": f"{expected_stem}{output_extension}",
+        "expected_stem": expected_stem,
+        "expected_date_token": date_match["date_token"],
+        "expected_sector": sector,
+        "expected_sector_candidates": sector,
+        "expected_stem_candidates": expected_stem,
+        "date_warning": date_match.get("date_warning"),
+        "rename_status": "ok",
+        "sector_source": "spatial_sector",
+    }
+
+
 def scan_input_images(input_folder: str | Path, extensions: Iterable[str] = IMAGE_EXTENSIONS) -> pd.DataFrame:
     input_folder = Path(input_folder)
     extensions = {ext.lower() for ext in extensions}
@@ -338,6 +393,200 @@ def arcpy_table_rows_to_dataframe(table_path: str, max_rows: int | None = None) 
             rows.append(dict(zip(field_names, values)))
 
     return pd.DataFrame(rows)
+
+
+def _extent_to_polygon(extent, spatial_reference):
+    import arcpy
+
+    points = arcpy.Array(
+        [
+            arcpy.Point(extent.XMin, extent.YMin),
+            arcpy.Point(extent.XMin, extent.YMax),
+            arcpy.Point(extent.XMax, extent.YMax),
+            arcpy.Point(extent.XMax, extent.YMin),
+            arcpy.Point(extent.XMin, extent.YMin),
+        ]
+    )
+    return arcpy.Polygon(points, spatial_reference)
+
+
+def load_sector_polygons(index_fc: str, sector_field: str = "Sector") -> tuple[list[dict], object]:
+    import arcpy
+
+    field_names = {field.name.lower(): field.name for field in arcpy.ListFields(index_fc)}
+    if sector_field.lower() not in field_names:
+        raise ValueError(f"No existe el campo '{sector_field}' en {index_fc}")
+
+    resolved_sector_field = field_names[sector_field.lower()]
+    spatial_reference = arcpy.Describe(index_fc).spatialReference
+    polygons = []
+
+    with arcpy.da.SearchCursor(index_fc, [resolved_sector_field, "SHAPE@"]) as cursor:
+        for sector_value, geometry in cursor:
+            if geometry is None or sector_value in (None, ""):
+                continue
+            polygons.append(
+                {
+                    "sector_field": resolved_sector_field,
+                    "sector_raw": sector_value,
+                    "sector_token": format_sector_token(sector_value),
+                    "geometry": geometry,
+                    "area": geometry.area,
+                }
+            )
+
+    return polygons, spatial_reference
+
+
+def calculate_spatial_sector_matches(
+    images_df: pd.DataFrame,
+    index_fc: str,
+    sector_field: str = "Sector",
+) -> pd.DataFrame:
+    import arcpy
+
+    sector_polygons, target_spatial_reference = load_sector_polygons(index_fc, sector_field=sector_field)
+    rows = []
+
+    for _, image_row in images_df.iterrows():
+        file_path = image_row.get("path")
+        file_name = image_row.get("file_name")
+
+        try:
+            raster_description = arcpy.Describe(file_path)
+            raster_spatial_reference = raster_description.spatialReference
+            raster_geometry = _extent_to_polygon(raster_description.extent, raster_spatial_reference)
+
+            if (
+                raster_geometry.spatialReference
+                and target_spatial_reference
+                and raster_geometry.spatialReference.factoryCode != target_spatial_reference.factoryCode
+            ):
+                raster_geometry = raster_geometry.projectAs(target_spatial_reference)
+
+            raster_area = raster_geometry.area
+            if not raster_area:
+                rows.append(
+                    {
+                        "file_name": file_name,
+                        "path": file_path,
+                        "spatial_status": "sin_area_raster",
+                        "spatial_sector_raw": None,
+                        "spatial_sector": None,
+                        "spatial_overlap_area": 0,
+                        "spatial_overlap_pct": 0,
+                        "spatial_overlap_count": 0,
+                    }
+                )
+                continue
+
+            matches = []
+            for polygon in sector_polygons:
+                if raster_geometry.disjoint(polygon["geometry"]):
+                    continue
+
+                intersection = raster_geometry.intersect(polygon["geometry"], 4)
+                intersection_area = intersection.area if intersection else 0
+                if intersection_area <= 0:
+                    continue
+
+                matches.append(
+                    {
+                        "sector_raw": polygon["sector_raw"],
+                        "sector_token": polygon["sector_token"],
+                        "overlap_area": intersection_area,
+                        "overlap_pct": (intersection_area / raster_area) * 100,
+                    }
+                )
+
+            if not matches:
+                rows.append(
+                    {
+                        "file_name": file_name,
+                        "path": file_path,
+                        "spatial_status": "sin_cruce_sector",
+                        "spatial_sector_raw": None,
+                        "spatial_sector": None,
+                        "spatial_overlap_area": 0,
+                        "spatial_overlap_pct": 0,
+                        "spatial_overlap_count": 0,
+                    }
+                )
+                continue
+
+            matches = sorted(matches, key=lambda item: item["overlap_area"], reverse=True)
+            best = matches[0]
+            rows.append(
+                {
+                    "file_name": file_name,
+                    "path": file_path,
+                    "spatial_status": "ok",
+                    "spatial_sector_raw": best["sector_raw"],
+                    "spatial_sector": best["sector_token"],
+                    "spatial_overlap_area": best["overlap_area"],
+                    "spatial_overlap_pct": best["overlap_pct"],
+                    "spatial_overlap_count": len(matches),
+                    "spatial_all_matches": "|".join(
+                        f"{match['sector_token']}:{match['overlap_pct']:.2f}"
+                        for match in matches
+                    ),
+                }
+            )
+        except Exception as error:
+            rows.append(
+                {
+                    "file_name": file_name,
+                    "path": file_path,
+                    "spatial_status": "error",
+                    "spatial_sector_raw": None,
+                    "spatial_sector": None,
+                    "spatial_overlap_area": 0,
+                    "spatial_overlap_pct": 0,
+                    "spatial_overlap_count": 0,
+                    "spatial_error": str(error),
+                }
+            )
+
+    return pd.DataFrame(rows)
+
+
+def add_expected_names_with_spatial_sector(
+    ortho_images_df: pd.DataFrame,
+    spatial_sector_df: pd.DataFrame,
+) -> pd.DataFrame:
+    if ortho_images_df.empty:
+        return add_expected_names(ortho_images_df)
+
+    spatial_columns = [
+        "file_name",
+        "path",
+        "spatial_status",
+        "spatial_sector_raw",
+        "spatial_sector",
+        "spatial_overlap_area",
+        "spatial_overlap_pct",
+        "spatial_overlap_count",
+        "spatial_all_matches",
+        "spatial_error",
+    ]
+    available_spatial_columns = [column for column in spatial_columns if column in spatial_sector_df.columns]
+    merged_df = ortho_images_df.merge(
+        spatial_sector_df[available_spatial_columns],
+        on=["file_name", "path"],
+        how="left",
+    )
+
+    expected_rows = []
+    for _, row in merged_df.iterrows():
+        if row.get("spatial_status") == "ok" and row.get("spatial_sector_raw"):
+            expected_rows.append(build_expected_image_name_from_date_sector(row["file_name"], row["spatial_sector_raw"]))
+        else:
+            expected = build_expected_image_name(row["file_name"])
+            expected["sector_source"] = "filename"
+            expected_rows.append(expected)
+
+    expected_df = pd.DataFrame(expected_rows)
+    return pd.concat([merged_df.reset_index(drop=True), expected_df], axis=1)
 
 
 def export_mosaic_dataset_paths_to_dataframe(
