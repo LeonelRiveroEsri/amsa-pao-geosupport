@@ -1,0 +1,13 @@
+﻿metric,value
+run_timestamp,20260615_162243
+preparation_run,20260615_155625
+dry_run,True
+mosaic_dataset,\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\01_Proyectos_ArcGIS\APRX\CL MLP PAO Aereo Image Server_v2\SQLServer-amssclgis06_ArcGIS-Aereo.sde\OWD.CL_MLP_PAO_IF_Ortho_Geosupport
+records_to_process,32
+maxps_value,10000
+lowps_value,0.15
+copy_status_dry_run,32
+mosaic_add_status_dry_run,32
+footprint_status_dry_run,32
+attribute_status_dry_run,32
+overall_status_dry_run,32
