@@ -14,7 +14,7 @@ ORTHO_MOSAIC_EXTENSIONS = {".tif", ".tiff"}
 IMAGE_EXTENSIONS = ORTHO_MOSAIC_EXTENSIONS | {".jpg", ".jpeg", ".png", ".sid", ".jp2", ".ecw"}
 RENAME_PREFIX = "CL_MLP_PAO_IF_Ortho"
 DEFAULT_RENAMED_EXTENSION = ".tif"
-AUDIT_LOGIC_VERSION = "2026-06-12-parser-fix-export-mosaic-paths"
+AUDIT_LOGIC_VERSION = "2026-06-15-spatial-sector-only"
 
 SECTOR_ALIASES = {
     "ESTACION DE BOMBEO N 1": "estacion_de_bombeo_no1",
@@ -230,9 +230,18 @@ def build_expected_image_name_from_date_sector(
     output_extension: str = DEFAULT_RENAMED_EXTENSION,
 ) -> dict:
     if re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE):
-        result = build_expected_image_name(file_name, output_extension=output_extension)
-        result["sector_source"] = "descartar_posible_plano"
-        return result
+        return {
+            "expected_name": None,
+            "expected_file_name": None,
+            "expected_stem": None,
+            "expected_date_token": None,
+            "expected_sector": None,
+            "expected_sector_candidates": None,
+            "expected_stem_candidates": None,
+            "date_warning": None,
+            "rename_status": "descartar_posible_plano",
+            "sector_source": "descartar_posible_plano",
+        }
 
     date_match = extract_date_token_from_filename(file_name)
     if not date_match:
@@ -275,6 +284,68 @@ def build_expected_image_name_from_date_sector(
         "expected_stem_candidates": expected_stem,
         "date_warning": date_match.get("date_warning"),
         "rename_status": "ok",
+        "sector_source": "spatial_sector",
+    }
+
+
+def build_expected_image_name_from_spatial_result(
+    file_name: str,
+    spatial_status,
+    spatial_sector_raw,
+    output_extension: str = DEFAULT_RENAMED_EXTENSION,
+) -> dict:
+    """Construye el nombre esperado usando fecha del archivo y sector geografico.
+
+    No infiere sector desde el nombre del archivo. Si el cruce espacial no entrega
+    un sector valido, retorna la fecha detectada y deja el registro como no
+    renombrable para revision.
+    """
+    if spatial_status == "ok" and spatial_sector_raw:
+        return build_expected_image_name_from_date_sector(
+            file_name,
+            spatial_sector_raw,
+            output_extension=output_extension,
+        )
+
+    if re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE):
+        return {
+            "expected_name": None,
+            "expected_file_name": None,
+            "expected_stem": None,
+            "expected_date_token": None,
+            "expected_sector": None,
+            "expected_sector_candidates": None,
+            "expected_stem_candidates": None,
+            "date_warning": None,
+            "rename_status": "descartar_posible_plano",
+            "sector_source": "descartar_posible_plano",
+        }
+
+    date_match = extract_date_token_from_filename(file_name)
+    if not date_match:
+        return {
+            "expected_name": None,
+            "expected_file_name": None,
+            "expected_stem": None,
+            "expected_date_token": None,
+            "expected_sector": None,
+            "expected_sector_candidates": None,
+            "expected_stem_candidates": None,
+            "date_warning": None,
+            "rename_status": "sin_fecha",
+            "sector_source": "spatial_sector",
+        }
+
+    return {
+        "expected_name": None,
+        "expected_file_name": None,
+        "expected_stem": None,
+        "expected_date_token": date_match["date_token"],
+        "expected_sector": None,
+        "expected_sector_candidates": None,
+        "expected_stem_candidates": None,
+        "date_warning": date_match.get("date_warning"),
+        "rename_status": str(spatial_status) if spatial_status else "sin_cruce_sector",
         "sector_source": "spatial_sector",
     }
 
@@ -578,12 +649,13 @@ def add_expected_names_with_spatial_sector(
 
     expected_rows = []
     for _, row in merged_df.iterrows():
-        if row.get("spatial_status") == "ok" and row.get("spatial_sector_raw"):
-            expected_rows.append(build_expected_image_name_from_date_sector(row["file_name"], row["spatial_sector_raw"]))
-        else:
-            expected = build_expected_image_name(row["file_name"])
-            expected["sector_source"] = "filename"
-            expected_rows.append(expected)
+        expected_rows.append(
+            build_expected_image_name_from_spatial_result(
+                row["file_name"],
+                row.get("spatial_status"),
+                row.get("spatial_sector_raw"),
+            )
+        )
 
     expected_df = pd.DataFrame(expected_rows)
     return pd.concat([merged_df.reset_index(drop=True), expected_df], axis=1)
