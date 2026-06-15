@@ -1,0 +1,9 @@
+﻿metric,value
+run_timestamp,20260615_125519
+input_folder,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT\20260519_Geosupport
+destination_root,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\
+input_tif_count,33
+copy_ready_count,28
+review_count,5
+destination_exists_count,0
+duplicate_destination_count,4
