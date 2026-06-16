@@ -1,6 +1,9 @@
 mmpk/*.mmpk
 excel/~$*.xlsx
+# Ignorar todo dentro de data
 outputs/*
+# Pero permitir archivos CSV directos dentro de data
+!outputs/*.csv
 *.pyc
 *.pyc.*
 
