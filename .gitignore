@@ -1,5 +1,6 @@
 mmpk/*.mmpk
 excel/~$*.xlsx
+outputs/*
 *.pyc
 *.pyc.*
 
