@@ -1,4 +1,5 @@
 mmpk/*.mmpk
+Dataset/*
 excel/~$*.xlsx
 # Ignorar todo dentro de data
 outputs/*
