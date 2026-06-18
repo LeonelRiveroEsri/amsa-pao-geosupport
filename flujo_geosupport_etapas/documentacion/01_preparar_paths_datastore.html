@@ -228,6 +228,11 @@
             <td>Se recorre de forma recursiva, incluyendo subdirectorios.</td>
           </tr>
           <tr>
+            <td><code>json/fechas.json</code></td>
+            <td>Diccionario opcional de fechas por nombre de archivo.</td>
+            <td>Tiene prioridad sobre la fecha detectada desde el nombre. Permite procesar archivos sin patron de fecha o con nombres no estandar.</td>
+          </tr>
+          <tr>
             <td><code>PATH_FC_INDICE_VUELOS_IMGS</code></td>
             <td>Feature class con geometria de sectores o footprints de referencia.</td>
             <td>Define el sector geografico que se usara en el nombre final de la imagen.</td>
@@ -280,9 +285,11 @@
 
       <h3>Fecha de adquisicion</h3>
       <ul>
-        <li>La fecha se obtiene desde el string del nombre original de la imagen.</li>
+        <li>Primero se busca la fecha en <code>json/fechas.json</code>, usando el nombre normalizado del archivo o el codigo <code>GEOSP-TRN</code>.</li>
+        <li>Si el archivo no esta en el diccionario, la fecha se obtiene desde el string del nombre original de la imagen.</li>
         <li>La fecha se normaliza a token <code>YY_MM_DD</code>.</li>
-        <li>Si no se detecta una fecha valida, el registro queda para revision y no se marca como listo.</li>
+        <li>Si no se detecta una fecha valida en ninguna fuente, el registro queda para revision y no se marca como listo.</li>
+        <li>Los archivos con patron <code>DW</code> o <code>1001-03-T-CS</code> pueden prepararse si tienen fecha explicita en el diccionario y cruce espacial valido.</li>
       </ul>
 
       <h3>Sector geografico</h3>
@@ -449,6 +456,11 @@
             <td>Imagenes que no quedaron listas para copiar.</td>
             <td>Resolver problemas de fecha, sector o regla de carpeta antes de continuar.</td>
           </tr>
+          <tr>
+            <td><code>06_date_dictionary.csv</code></td>
+            <td>Lectura normalizada del diccionario <code>json/fechas.json</code>.</td>
+            <td>Validar que las fechas entregadas sean validas y hayan sido interpretadas por el flujo.</td>
+          </tr>
         </tbody>
       </table>
     </section>
@@ -486,6 +498,10 @@
           <tr>
             <td><code>expected_date_token</code></td>
             <td>Fecha detectada desde el nombre original en formato <code>YY_MM_DD</code>.</td>
+          </tr>
+          <tr>
+            <td><code>date_source</code></td>
+            <td>Indica si la fecha vino del diccionario <code>date_dictionary</code> o del nombre del archivo <code>file_name</code>.</td>
           </tr>
           <tr>
             <td><code>spatial_sector_raw</code></td>

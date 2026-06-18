@@ -131,6 +131,34 @@ def extract_date_token_from_filename(file_name: str) -> dict | None:
     return selected
 
 
+def date_token_from_iso_date(value) -> dict | None:
+    if value is None or pd.isna(value):
+        return None
+
+    value = str(value).strip()
+    match = re.search(r"(?P<year>20\d{2})[-_/](?P<month>\d{1,2})[-_/](?P<day>\d{1,2})", value)
+    if not match:
+        return None
+
+    year_full = int(match.group("year"))
+    month = int(match.group("month"))
+    day = int(match.group("day"))
+    if not is_valid_date_parts(year_full, month, day):
+        return None
+
+    year = str(year_full)[-2:]
+    return {
+        "year": year,
+        "month": f"{month:02d}",
+        "day": f"{day:02d}",
+        "date_token": f"{year}_{month:02d}_{day:02d}",
+        "matched_text": value,
+        "span": None,
+        "date_warning": None,
+        "date_source": "date_dictionary",
+    }
+
+
 def extract_sector_candidates_from_filename(file_name: str, date_match: dict | None) -> list[str]:
     stem = Path(file_name).stem
     working = stem
@@ -238,8 +266,9 @@ def build_expected_image_name_from_date_sector(
     file_name: str,
     sector_value,
     output_extension: str = DEFAULT_RENAMED_EXTENSION,
+    date_match_override: dict | None = None,
 ) -> dict:
-    if re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE):
+    if not date_match_override and re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE):
         return {
             "expected_name": None,
             "expected_file_name": None,
@@ -253,7 +282,7 @@ def build_expected_image_name_from_date_sector(
             "sector_source": "descartar_posible_plano",
         }
 
-    date_match = extract_date_token_from_filename(file_name)
+    date_match = date_match_override or extract_date_token_from_filename(file_name)
     if not date_match:
         return {
             "expected_name": None,
@@ -293,6 +322,7 @@ def build_expected_image_name_from_date_sector(
         "expected_sector_candidates": sector,
         "expected_stem_candidates": expected_stem,
         "date_warning": date_match.get("date_warning"),
+        "date_source": date_match.get("date_source", "file_name"),
         "rename_status": "ok",
         "sector_source": "spatial_sector",
     }
@@ -303,6 +333,7 @@ def build_expected_image_name_from_spatial_result(
     spatial_status,
     spatial_sector_raw,
     output_extension: str = DEFAULT_RENAMED_EXTENSION,
+    date_match_override: dict | None = None,
 ) -> dict:
     """Construye el nombre esperado usando fecha del archivo y sector geografico.
 
@@ -315,9 +346,10 @@ def build_expected_image_name_from_spatial_result(
             file_name,
             spatial_sector_raw,
             output_extension=output_extension,
+            date_match_override=date_match_override,
         )
 
-    if re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE):
+    if not date_match_override and re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE):
         return {
             "expected_name": None,
             "expected_file_name": None,
@@ -331,7 +363,7 @@ def build_expected_image_name_from_spatial_result(
             "sector_source": "descartar_posible_plano",
         }
 
-    date_match = extract_date_token_from_filename(file_name)
+    date_match = date_match_override or extract_date_token_from_filename(file_name)
     if not date_match:
         return {
             "expected_name": None,
@@ -355,6 +387,7 @@ def build_expected_image_name_from_spatial_result(
         "expected_sector_candidates": None,
         "expected_stem_candidates": None,
         "date_warning": date_match.get("date_warning"),
+        "date_source": date_match.get("date_source", "file_name"),
         "rename_status": str(spatial_status) if spatial_status else "sin_cruce_sector",
         "sector_source": "spatial_sector",
     }
@@ -664,6 +697,7 @@ def calculate_spatial_sector_matches(
 def add_expected_names_with_spatial_sector(
     ortho_images_df: pd.DataFrame,
     spatial_sector_df: pd.DataFrame,
+    date_lookup: dict | None = None,
 ) -> pd.DataFrame:
     if ortho_images_df.empty:
         return add_expected_names(ortho_images_df)
@@ -689,11 +723,29 @@ def add_expected_names_with_spatial_sector(
 
     expected_rows = []
     for _, row in merged_df.iterrows():
+        lookup_keys = [
+            normalize_key(row.get("file_name")),
+            normalize_key(Path(str(row.get("file_name"))).stem),
+            normalize_key(row.get("path")),
+            normalize_key(Path(str(row.get("path"))).stem),
+        ]
+        trn_match = re.search(r"GEOSP[-_ ]?TRN[-_ ]?(\d+)", str(row.get("file_name")), flags=re.IGNORECASE)
+        if trn_match:
+            lookup_keys.append(f"geosp_trn_{trn_match.group(1)}")
+
+        date_match_override = None
+        if date_lookup:
+            for lookup_key in lookup_keys:
+                if lookup_key and lookup_key in date_lookup:
+                    date_match_override = date_lookup[lookup_key]
+                    break
+
         expected_rows.append(
             build_expected_image_name_from_spatial_result(
                 row["file_name"],
                 row.get("spatial_status"),
                 row.get("spatial_sector_raw"),
+                date_match_override=date_match_override,
             )
         )
 
