@@ -793,7 +793,7 @@ def export_no_match_extent_features(
     output_gdb = Path(output_gdb)
     output_gdb.parent.mkdir(parents=True, exist_ok=True)
     if not arcpy.Exists(str(output_gdb)):
-        arcpy.management.CreateFileGDB(str(output_gdb.parent), output_gdb.name)
+        arcpy.management.CreateFileGDB(str(output_gdb.parent), output_gdb.stem)
 
     output_fc = str(output_gdb / feature_class_name)
     if arcpy.Exists(output_fc):
