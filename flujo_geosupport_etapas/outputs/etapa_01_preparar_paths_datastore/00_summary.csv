@@ -1,0 +1,20 @@
+﻿metric,value
+run_timestamp,20260618_110837
+audit_logic_version,2026-06-15-spatial-sector-preserve-token
+input_folder,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT\20260206_Geosupport_primera entrega
+sector_feature_class,\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_06_COMPLEMENTOS\CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO
+datastore_destination_root,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO
+sector_field,Sector
+sector_query,Sensor <> 'DJI MATRICE 350 RTK'
+input_files_count,607
+ortho_images_count,33
+ready_for_datastore_count,16
+review_required_count,17
+duplicate_original_expected_file_name_count,0
+duplicate_expected_file_name_resolved_count,0
+spatial_status_ok,25
+spatial_status_sin_cruce_sector,8
+rename_status_ok,16
+rename_status_descartar_posible_plano,9
+rename_status_sin_fecha,6
+rename_status_sin_cruce_sector,2
