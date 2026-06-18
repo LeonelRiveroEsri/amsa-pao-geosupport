@@ -1,5 +1,5 @@
 ﻿metric,value
-run_timestamp,20260618_132621
+run_timestamp,20260618_164306
 audit_logic_version,2026-06-15-spatial-sector-preserve-token
 input_folder,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT\20260206_Geosupport_primera entrega
 sector_feature_class,\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_06_COMPLEMENTOS\CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO
@@ -11,15 +11,14 @@ date_dictionary_json,c:\Users\esrlrivero_adm\Documents\Geosupport\amsa-pao-geosu
 date_dictionary_valid_count,17
 input_files_count,607
 ortho_images_count,33
-ready_for_datastore_count,25
-review_required_count,8
+ready_for_datastore_count,27
+review_required_count,6
 duplicate_original_expected_file_name_count,4
 duplicate_expected_file_name_resolved_count,4
-spatial_status_ok,31
-spatial_status_sin_cruce_sector,2
-rename_status_ok,31
-rename_status_sin_cruce_sector,2
+spatial_status_ok,33
+rename_status_ok,33
 date_source_date_dictionary,17
 date_source_file_name,16
-spatial_query_source_query_principal,27
+spatial_query_source_query_principal,25
 spatial_query_source_query_fallback_invertida,6
+spatial_query_source_excepcion_espacial_manual,2
