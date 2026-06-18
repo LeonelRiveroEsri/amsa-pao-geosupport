@@ -1,11 +1,12 @@
 ﻿metric,value
-run_timestamp,20260618_123110
+run_timestamp,20260618_132621
 audit_logic_version,2026-06-15-spatial-sector-preserve-token
 input_folder,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT\20260206_Geosupport_primera entrega
 sector_feature_class,\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_06_COMPLEMENTOS\CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO
 datastore_destination_root,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO
 sector_field,Sector
 sector_query,Sensor <> 'DJI MATRICE 350 RTK'
+sector_query_fallback,Sensor = 'DJI MATRICE 350 RTK'
 date_dictionary_json,c:\Users\esrlrivero_adm\Documents\Geosupport\amsa-pao-geosupport\flujo_geosupport_etapas\json\fechas.json
 date_dictionary_valid_count,17
 input_files_count,607
@@ -14,9 +15,11 @@ ready_for_datastore_count,25
 review_required_count,8
 duplicate_original_expected_file_name_count,4
 duplicate_expected_file_name_resolved_count,4
-spatial_status_ok,25
-spatial_status_sin_cruce_sector,8
-rename_status_ok,25
-rename_status_sin_cruce_sector,8
+spatial_status_ok,31
+spatial_status_sin_cruce_sector,2
+rename_status_ok,31
+rename_status_sin_cruce_sector,2
 date_source_date_dictionary,17
 date_source_file_name,16
+spatial_query_source_query_principal,27
+spatial_query_source_query_fallback_invertida,6
