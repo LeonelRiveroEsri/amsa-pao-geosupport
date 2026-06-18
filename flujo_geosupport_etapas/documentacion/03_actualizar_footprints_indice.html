@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>03 - Actualizar footprints en indice</title>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #17212b; line-height: 1.55; }
+    header { background: #102a3a; color: #fff; padding: 34px 42px; border-bottom: 5px solid #126c8f; }
+    header h1 { margin: 0 0 8px; font-size: 30px; font-weight: 650; }
+    header p { margin: 0; max-width: 980px; color: #d8e6ee; }
+    main { max-width: 1180px; margin: 0 auto; padding: 28px 34px 54px; }
+    h2 { margin: 34px 0 12px; font-size: 22px; color: #102a3a; border-bottom: 1px solid #d9e0e7; padding-bottom: 8px; }
+    h3 { margin: 22px 0 8px; font-size: 17px; color: #19384a; }
+    code { font-family: Consolas, "Courier New", monospace; background: #eef3f7; padding: 2px 5px; border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0 22px; font-size: 14px; }
+    th, td { border: 1px solid #d9e0e7; padding: 9px 10px; vertical-align: top; text-align: left; }
+    th { background: #eaf1f6; color: #102a3a; font-weight: 650; }
+    tr:nth-child(even) td { background: #fafbfd; }
+    .note { border-left: 4px solid #126c8f; background: #f4f7fa; padding: 12px 14px; margin: 16px 0; }
+    .warn { border-left: 4px solid #a15c00; background: #fff8ee; padding: 12px 14px; margin: 16px 0; }
+    .path { display: block; margin: 10px 0; padding: 12px; background: #f7f9fb; border: 1px solid #d9e0e7; overflow-wrap: anywhere; }
+    footer { max-width: 1180px; margin: 0 auto; padding: 0 34px 34px; color: #5c6975; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>03 - Actualizar footprints en indice</h1>
+    <p>Documentacion funcional de la etapa que lleva las geometrías de las imagenes cargadas desde el mosaic dataset hacia el indice de vuelos PAO y recalcula el campo Nombre_de_Vuelo.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Objetivo</h2>
+      <p>
+        Esta etapa sincroniza el componente vectorial del flujo. Despues de cargar las imagenes al mosaic dataset,
+        se exportan sus footprints, se adaptan los campos al modelo del feature class de indice y se anexan las nuevas
+        geometrías a la GDB corporativa.
+      </p>
+      <div class="warn">
+        La etapa escribe en una feature class corporativa y puede actualizar el campo <code>NombreVuelo</code> del mosaic dataset.
+        Por eso queda con <code>DRY_RUN = True</code> por defecto.
+      </div>
+    </section>
+
+    <section>
+      <h2>Entradas</h2>
+      <table>
+        <thead><tr><th>Entrada</th><th>Descripcion</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td><code>02_load_results.csv</code></td><td>Resultado de la etapa 2.</td><td>Define los <code>Name</code> de imagenes cargadas que deben exportarse.</td></tr>
+          <tr><td><code>PATH_MOSAIC_DATASET</code></td><td>Mosaic dataset de imagenes PAO.</td><td>Fuente para <code>ExportMosaicDatasetGeometry</code>.</td></tr>
+          <tr><td><code>FC_FOOTPRINT_INDICE</code></td><td><code>CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO</code>.</td><td>Destino donde se anexan los footprints exportados.</td></tr>
+          <tr><td><code>Dataset/data.gdb</code> o <code>Dataset/Datos.gdb</code></td><td>GDB temporal local del proyecto.</td><td>Almacena la feature class temporal antes del append.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Flujo</h2>
+      <ol>
+        <li>Leer los resultados de carga de la etapa 2.</li>
+        <li>Seleccionar los registros cargados correctamente o ya existentes en el mosaic dataset.</li>
+        <li>Consultar si esos <code>Name</code> ya existen en el indice para evitar duplicar geometrías.</li>
+        <li>Exportar footprints desde el mosaic dataset con <code>ExportMosaicDatasetGeometry</code>.</li>
+        <li>Renombrar campos de la exportacion para que coincidan con el feature class destino.</li>
+        <li>Hacer <code>Append</code> hacia el indice de vuelos.</li>
+        <li>Recalcular <code>Nombre_de_Vuelo</code> ordenando por <code>Name ASC</code>.</li>
+        <li>Actualizar <code>NombreVuelo</code> en el mosaic dataset usando el valor calculado en el indice.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Mapeo de campos</h2>
+      <p>La exportacion del mosaic dataset trae nombres de campos distintos al modelo del indice. Antes del append se aplican estos renombres:</p>
+      <table>
+        <thead><tr><th>Campo exportado</th><th>Campo destino</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td><code>FechaAdqui</code></td><td><code>Fecha_Adqu</code></td><td>Fecha de adquisicion.</td></tr>
+          <tr><td><code>FechaCarga</code></td><td><code>Fecha_Publ</code></td><td>Fecha de publicacion/carga.</td></tr>
+          <tr><td><code>NombreVuelo</code></td><td><code>Nombre_de_Vuelo</code></td><td>Nombre operativo del vuelo.</td></tr>
+          <tr><td><code>ProductName</code></td><td><code>ProductNam</code></td><td>Identificador de producto/ObjectID en el modelo destino.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Nombre_de_Vuelo</h2>
+      <p>
+        La regla replica el notebook 009. Se recorre el indice completo ordenado por <code>Name ASC</code>. Para cada
+        registro con <code>Sector</code> y <code>Fecha_Adqu</code>, se asigna:
+      </p>
+      <code class="path">NNN_yy_mm_dd_sector</code>
+      <p>Ejemplo:</p>
+      <code class="path">001_26_05_08_DME_13</code>
+      <div class="note">
+        Si se activa <code>RECALCULATE_ALL_NOMBRE_VUELO</code>, el orden se recalcula para todo el indice, no solo para las nuevas imagenes.
+      </div>
+    </section>
+
+    <section>
+      <h2>Salidas</h2>
+      <code class="path">flujo_geosupport_etapas\outputs\etapa_03_actualizar_footprints_indice</code>
+      <table>
+        <thead><tr><th>Archivo</th><th>Contenido</th></tr></thead>
+        <tbody>
+          <tr><td><code>00_summary.csv</code></td><td>Resumen de parametros, nombres evaluados, anexados y actualizaciones.</td></tr>
+          <tr><td><code>01_stage_2_names.csv</code></td><td>Lista de nombres recibidos desde etapa 2.</td></tr>
+          <tr><td><code>02_names_to_append.csv</code></td><td>Nombres que no existian en el indice y se anexarian.</td></tr>
+          <tr><td><code>03_mosaic_nombre_vuelo_updates.csv</code></td><td>Actualizaciones aplicadas al campo <code>NombreVuelo</code> del mosaico.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Criterio para ejecutar</h2>
+      <ol>
+        <li>Ejecutar con <code>DRY_RUN = True</code>.</li>
+        <li>Revisar <code>02_names_to_append.csv</code> y confirmar que son las imagenes esperadas.</li>
+        <li>Cambiar <code>DRY_RUN = False</code>.</li>
+        <li>Ejecutar append y recalculo.</li>
+        <li>Validar en ArcGIS Pro que las nuevas geometrías aparecen en el indice.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>Documento asociado al notebook flujo_geosupport_etapas/03_actualizar_footprints_indice.ipynb.</footer>
+</body>
+</html>

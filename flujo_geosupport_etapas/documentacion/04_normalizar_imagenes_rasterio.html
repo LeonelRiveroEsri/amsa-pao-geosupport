@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>04 - Normalizar imagenes con Rasterio</title>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #17212b; line-height: 1.55; }
+    header { background: #102a3a; color: #fff; padding: 34px 42px; border-bottom: 5px solid #126c8f; }
+    header h1 { margin: 0 0 8px; font-size: 30px; font-weight: 650; }
+    header p { margin: 0; max-width: 980px; color: #d8e6ee; }
+    main { max-width: 1180px; margin: 0 auto; padding: 28px 34px 54px; }
+    h2 { margin: 34px 0 12px; font-size: 22px; color: #102a3a; border-bottom: 1px solid #d9e0e7; padding-bottom: 8px; }
+    h3 { margin: 22px 0 8px; font-size: 17px; color: #19384a; }
+    code { font-family: Consolas, "Courier New", monospace; background: #eef3f7; padding: 2px 5px; border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0 22px; font-size: 14px; }
+    th, td { border: 1px solid #d9e0e7; padding: 9px 10px; vertical-align: top; text-align: left; }
+    th { background: #eaf1f6; color: #102a3a; font-weight: 650; }
+    tr:nth-child(even) td { background: #fafbfd; }
+    .note { border-left: 4px solid #126c8f; background: #f4f7fa; padding: 12px 14px; margin: 16px 0; }
+    .warn { border-left: 4px solid #a15c00; background: #fff8ee; padding: 12px 14px; margin: 16px 0; }
+    .path { display: block; margin: 10px 0; padding: 12px; background: #f7f9fb; border: 1px solid #d9e0e7; overflow-wrap: anywhere; }
+    footer { max-width: 1180px; margin: 0 auto; padding: 0 34px 34px; color: #5c6975; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>04 - Normalizar imagenes con Rasterio</h1>
+    <p>Documentacion funcional de la etapa que genera imagenes normalizadas/cortadas usando los footprints cargados en el indice de vuelos.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Objetivo</h2>
+      <p>
+        Crear una version limpia de cada imagen cargada al datastore, recortada con la geometría de su footprint. El
+        proceso se hace con <code>rasterio.mask</code> para evitar deformaciones observadas con otros metodos de clip.
+      </p>
+      <div class="warn">
+        Por defecto <code>REPLACE_ORIGINALS = False</code>. La etapa genera copias normalizadas para revision. El reemplazo
+        de originales en el datastore debe activarse solo despues de validar visualmente los resultados.
+      </div>
+    </section>
+
+    <section>
+      <h2>Entradas</h2>
+      <table>
+        <thead><tr><th>Entrada</th><th>Descripcion</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td><code>02_load_results.csv</code></td><td>Resultado de carga al mosaico.</td><td>Entrega los <code>Name</code> y rutas <code>destination_path</code> de las imagenes cargadas.</td></tr>
+          <tr><td><code>01_load_input_with_attributes.csv</code></td><td>Manifest enriquecido de etapa 2.</td><td>Se usa como respaldo si falta alguna ruta en el CSV de resultados.</td></tr>
+          <tr><td><code>CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO</code></td><td>Feature class de footprints.</td><td>Fuente de geometría para recortar cada raster por <code>Name</code>.</td></tr>
+          <tr><td><code>destination_path</code></td><td>Ruta del TIF en datastore.</td><td>Raster que se normaliza.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Flujo</h2>
+      <ol>
+        <li>Leer imagenes cargadas desde la etapa 2.</li>
+        <li>Filtrar registros exitosos si <code>PROCESS_ONLY_SUCCESSFUL_LOADS = True</code>.</li>
+        <li>Cargar footprints desde el indice usando el campo <code>Name</code>.</li>
+        <li>Para cada imagen, buscar su geometría de footprint.</li>
+        <li>Proyectar el footprint al sistema del raster si corresponde.</li>
+        <li>Ejecutar <code>rasterio.mask.mask</code> con <code>crop=True</code>.</li>
+        <li>Escribir un GeoTIFF normalizado en la carpeta de salida.</li>
+        <li>Opcionalmente reemplazar el TIF original en datastore.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Normalizacion Rasterio</h2>
+      <table>
+        <thead><tr><th>Componente</th><th>Regla</th></tr></thead>
+        <tbody>
+          <tr><td><code>rasterio.mask.mask</code></td><td>Recorta usando el footprint con <code>crop=True</code> y mascara fuera del poligono.</td></tr>
+          <tr><td>RGB</td><td>Si el raster tiene 3 o mas bandas, se toman las primeras 3 como RGB.</td></tr>
+          <tr><td>Colormap / 1 banda</td><td>Si tiene una banda y colormap, se convierte a RGB usando la tabla de colores.</td></tr>
+          <tr><td>Alpha</td><td>Se agrega una cuarta banda alpha para transparencia limpia fuera del footprint.</td></tr>
+          <tr><td>Compresion</td><td>Se escribe GeoTIFF con <code>compress='deflate'</code> y <code>tiled=True</code>.</td></tr>
+          <tr><td>Color interpretation</td><td>Se define como <code>red</code>, <code>green</code>, <code>blue</code>, <code>alpha</code>.</td></tr>
+        </tbody>
+      </table>
+      <div class="note">
+        Este enfoque busca que el raster se vea correctamente tanto como item directo como dentro del mosaic dataset.
+      </div>
+    </section>
+
+    <section>
+      <h2>Reemplazo de originales</h2>
+      <p>
+        El notebook permite reemplazar el TIF original del datastore con la version normalizada. Esta accion esta apagada
+        por defecto.
+      </p>
+      <table>
+        <thead><tr><th>Parametro</th><th>Valor inicial</th><th>Descripcion</th></tr></thead>
+        <tbody>
+          <tr><td><code>REPLACE_ORIGINALS</code></td><td><code>False</code></td><td>Si es <code>True</code>, copia el normalizado encima del TIF original.</td></tr>
+          <tr><td><code>CREATE_BACKUP_BEFORE_REPLACE</code></td><td><code>False</code></td><td>Evita duplicar archivos <code>.bak</code> en datastore. Activar solo si se necesita respaldo.</td></tr>
+          <tr><td><code>BUILD_PYRAMIDS_AFTER_REPLACE</code></td><td><code>False</code></td><td>Permite reconstruir piramides/estadisticas despues del reemplazo.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Salidas</h2>
+      <code class="path">flujo_geosupport_etapas\outputs\etapa_04_normalizar_imagenes_rasterio</code>
+      <table>
+        <thead><tr><th>Salida</th><th>Contenido</th></tr></thead>
+        <tbody>
+          <tr><td><code>normalized_tif\</code></td><td>Carpeta con los GeoTIFF normalizados para revision.</td></tr>
+          <tr><td><code>00_summary.csv</code></td><td>Resumen de parametros, cantidad procesada y estados.</td></tr>
+          <tr><td><code>01_normalizacion_rasterio_resultados.csv</code></td><td>Resultado por imagen: origen, normalizado, reemplazo, estado y error si existe.</td></tr>
+          <tr><td><code>02_errors_review.csv</code></td><td>Solo errores a revisar.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Criterio para avanzar</h2>
+      <ol>
+        <li>Ejecutar con <code>REPLACE_ORIGINALS = False</code>.</li>
+        <li>Revisar una muestra de los TIF en <code>normalized_tif</code> en ArcGIS Pro.</li>
+        <li>Confirmar que la visualizacion directa y en mosaico es correcta.</li>
+        <li>Activar <code>REPLACE_ORIGINALS = True</code> si corresponde.</li>
+        <li>Revisar <code>01_normalizacion_rasterio_resultados.csv</code> y confirmar que no hay errores.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>Documento asociado al notebook flujo_geosupport_etapas/04_normalizar_imagenes_rasterio.ipynb.</footer>
+</body>
+</html>

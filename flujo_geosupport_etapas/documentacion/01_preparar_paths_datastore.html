@@ -204,6 +204,12 @@
         el datastore ni el mosaic dataset.
       </p>
       <div class="note">
+        Regla central de nomenclatura: el nombre destino de cada imagen se construye con dos datos solamente:
+        la fecha de adquisicion y el sector obtenido por cruce espacial. La fecha puede venir del nombre del archivo
+        o de una fuente controlada como una tabla/diccionario JSON; el sector no se toma del nombre, siempre viene
+        del cruce geografico.
+      </div>
+      <div class="note">
         Se asume que las imagenes recibidas en la carpeta de entrada son las imagenes que se quieren procesar.
         En esta etapa no se valida si ya fueron cargadas antes en el mosaico, no se comparan contra inventarios
         historicos y no se ejecutan controles de duplicidad contra el mosaic dataset. La revision se concentra en
@@ -296,15 +302,25 @@
       <ul>
         <li>El sector no se infiere desde el nombre del archivo.</li>
         <li>El sector se toma del cruce espacial con el feature class configurado.</li>
-        <li>Primero se usa la query principal de sectores. Si una imagen no cruza, se intenta una segunda pasada con la query invertida.</li>
+        <li>Primero se usa la query principal de sectores: <code>Sensor <> 'DJI MATRICE 350 RTK'</code>.</li>
+        <li>El sensor <code>DJI MATRICE 350 RTK</code> queda excluido de la primera pasada porque corresponde a otro grupo de referencia.</li>
+        <li>Si una imagen no cruza ningun sector con la query principal, se intenta una segunda pasada solo para esas imagenes con la query invertida: <code>Sensor = 'DJI MATRICE 350 RTK'</code>.</li>
         <li>Si una imagen cruza dos o mas sectores, se usa el sector con mayor porcentaje de interseccion.</li>
         <li>El texto del sector se preserva tal como viene desde el feature class; solamente se reemplazan espacios por guion bajo.</li>
         <li>Si la imagen no cruza ningun sector, el registro queda para revision.</li>
       </ul>
+      <div class="note">
+        La columna <code>spatial_query_source</code> permite auditar si el sector salio de la query principal
+        (<code>query_principal</code>) o del intento contra el sensor excluido (<code>query_fallback_invertida</code>).
+      </div>
 
       <h3>Nombre final</h3>
       <p>El nombre final se construye con esta estructura:</p>
       <code class="path-example">CL_MLP_PAO_IF_Ortho_YY_MM_DD_Sector.tif</code>
+      <p>
+        <code>YY_MM_DD</code> viene de la fecha de adquisicion. <code>Sector</code> viene del cruce espacial con el
+        feature class de sectores. Por eso una imagen no queda lista si falta fecha o si no cruza un sector valido.
+      </p>
       <p>Ejemplo:</p>
       <code class="path-example">CL_MLP_PAO_IF_Ortho_26_05_17_EV2.tif</code>
 

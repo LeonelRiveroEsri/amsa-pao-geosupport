@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flujo completo Geosupport - Carga de imagenes PAO</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17212b;
+      --muted: #5c6975;
+      --line: #d9e0e7;
+      --band: #f4f7fa;
+      --accent: #126c8f;
+      --accent-dark: #102a3a;
+      --ok: #12783f;
+      --warn: #a15c00;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: #fff;
+      line-height: 1.55;
+    }
+    header {
+      background: var(--accent-dark);
+      color: #fff;
+      padding: 34px 42px;
+      border-bottom: 5px solid var(--accent);
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 31px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+    header p {
+      margin: 0;
+      max-width: 1040px;
+      color: #d8e6ee;
+      font-size: 16px;
+    }
+    main {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 24px 34px 54px;
+    }
+    h2 {
+      margin: 34px 0 12px;
+      font-size: 23px;
+      color: var(--accent-dark);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 17px;
+      color: #19384a;
+    }
+    p { margin: 8px 0 12px; }
+    ul, ol { margin-top: 8px; padding-left: 24px; }
+    li { margin: 7px 0; }
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      background: #eef3f7;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 0.94em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 22px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: #eaf1f6;
+      color: var(--accent-dark);
+      font-weight: 650;
+    }
+    tr:nth-child(even) td { background: #fafbfd; }
+    a { color: #0f6688; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .stepper-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 2px 8px rgba(16, 42, 58, 0.08);
+    }
+    .stepper {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 12px 34px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .step-link {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 8px;
+      align-items: center;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      color: var(--ink);
+      min-height: 58px;
+    }
+    .step-link:hover {
+      text-decoration: none;
+      border-color: var(--accent);
+      background: #eef7fb;
+    }
+    .step-num {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .step-title {
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.2;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 16px 0 24px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 14px;
+    }
+    .card strong {
+      display: block;
+      color: var(--accent-dark);
+      margin-bottom: 6px;
+    }
+    .note {
+      border-left: 4px solid var(--accent);
+      background: var(--band);
+      padding: 12px 14px;
+      margin: 16px 0;
+    }
+    .warn {
+      border-left: 4px solid var(--warn);
+      background: #fff8ee;
+      padding: 12px 14px;
+      margin: 16px 0;
+    }
+    .path {
+      display: block;
+      margin: 10px 0;
+      padding: 12px;
+      background: #f7f9fb;
+      border: 1px solid var(--line);
+      overflow-wrap: anywhere;
+    }
+    .stage {
+      scroll-margin-top: 92px;
+      padding-top: 8px;
+    }
+    .stage-header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 30px;
+    }
+    .stage-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--accent-dark);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+    .stage-header h2 {
+      margin: 0;
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+    footer {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 0 34px 34px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 980px) {
+      .stepper { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .stepper-wrap { position: static; }
+      main { padding: 22px 20px 42px; }
+      header { padding: 28px 22px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Flujo completo Geosupport - Carga de imagenes PAO</h1>
+    <p>Documento maestro del flujo por etapas: preparacion de paths, carga al datastore y mosaico, actualizacion de footprints, normalizacion Rasterio y preparacion del APRX para publicacion.</p>
+  </header>
+
+  <nav class="stepper-wrap" aria-label="Navegacion por etapas">
+    <div class="stepper">
+      <a class="step-link" href="#etapa-01"><span class="step-num">01</span><span class="step-title">Paths datastore</span></a>
+      <a class="step-link" href="#etapa-02"><span class="step-num">02</span><span class="step-title">Carga mosaico</span></a>
+      <a class="step-link" href="#etapa-03"><span class="step-num">03</span><span class="step-title">Footprints indice</span></a>
+      <a class="step-link" href="#etapa-04"><span class="step-num">04</span><span class="step-title">Normalizacion</span></a>
+      <a class="step-link" href="#etapa-05"><span class="step-num">05</span><span class="step-title">APRX publicacion</span></a>
+    </div>
+  </nav>
+
+  <main>
+    <section>
+      <h2>Vision General</h2>
+      <p>
+        El flujo compila el procesamiento de una entrega de imagenes drone PAO desde la carpeta de entrada hasta la
+        preparacion del APRX para publicacion. Cada etapa deja outputs propios y puede validarse antes de avanzar.
+      </p>
+      <div class="summary-grid">
+        <div class="card">
+          <strong>Principio operativo</strong>
+          Las imagenes de entrada se consideran confiables como entrega nueva. El flujo valida nombre, sector, destino y estados de carga.
+        </div>
+        <div class="card">
+          <strong>Fuente de nombre final</strong>
+          La fecha viene del nombre o de <code>json/fechas.json</code>; el sector viene del cruce espacial.
+        </div>
+        <div class="card">
+          <strong>Control de escritura</strong>
+          Las etapas que escriben en datastore, GDB, mosaico o APRX parten con parametros de revision antes de modificar originales.
+        </div>
+      </div>
+
+      <h3>Orden de ejecucion</h3>
+      <ol>
+        <li>Ejecutar etapa 1 y validar <code>04_ready_for_datastore.csv</code>.</li>
+        <li>Ejecutar etapa 2 con <code>DRY_RUN = True</code>; luego <code>False</code> para cargar.</li>
+        <li>Ejecutar etapa 3 para anexar footprints al indice y recalcular <code>Nombre_de_Vuelo</code>.</li>
+        <li>Ejecutar etapa 4 para normalizar imagenes con Rasterio y revisar salidas.</li>
+        <li>Ejecutar etapa 5 para preparar el APRX y guardar copia de revision.</li>
+      </ol>
+    </section>
+
+    <section id="etapa-01" class="stage">
+      <div class="stage-header"><span class="stage-badge">01</span><h2>Preparar paths destino para datastore</h2></div>
+      <p>
+        Recibe la carpeta de imagenes nuevas, detecta imagenes TIF/TIFF, calcula el sector por cruce espacial y genera
+        el nombre final y la ruta destino en el datastore.
+      </p>
+      <table>
+        <thead><tr><th>Elemento</th><th>Detalle</th></tr></thead>
+        <tbody>
+          <tr><td>Notebook</td><td><code>01_preparar_paths_datastore.ipynb</code></td></tr>
+          <tr><td>Documento detallado</td><td><a href="01_preparar_paths_datastore.html">01_preparar_paths_datastore.html</a></td></tr>
+          <tr><td>Entrada principal</td><td><code>PATH_INPUT_IMAGENES</code>, <code>PATH_FC_INDICE_VUELOS_IMGS</code>, <code>json/fechas.json</code></td></tr>
+          <tr><td>Output clave</td><td><code>outputs/etapa_01_preparar_paths_datastore/04_ready_for_datastore.csv</code></td></tr>
+        </tbody>
+      </table>
+      <h3>Logica clave</h3>
+      <ul>
+        <li>Busqueda recursiva desde la carpeta input.</li>
+        <li>El nombre destino se crea con fecha + sector espacial: <code>CL_MLP_PAO_IF_Ortho_YY_MM_DD_Sector.tif</code>.</li>
+        <li>La fecha puede venir del nombre original o de una tabla/diccionario controlado en <code>json/fechas.json</code>.</li>
+        <li>El sector no se toma del nombre del archivo; viene del cruce espacial con el feature class de sectores.</li>
+        <li>El cruce espacial usa primero la query principal: <code>Sensor <> 'DJI MATRICE 350 RTK'</code>.</li>
+        <li>Las imagenes que no cruzan con la query principal se vuelven a cruzar contra el sensor excluido: <code>Sensor = 'DJI MATRICE 350 RTK'</code>.</li>
+        <li>El origen del cruce queda auditado en <code>spatial_query_source</code>.</li>
+        <li>Nombre final: <code>CL_MLP_PAO_IF_Ortho_YY_MM_DD_Sector.tif</code>.</li>
+        <li>Destino: raiz datastore + carpeta por sector + carpeta mensual + nombre final.</li>
+        <li>Exporta diagnostico de no cruzados como CSV y feature class de extents en GDB.</li>
+      </ul>
+      <div class="note">
+        El archivo que alimenta la etapa 2 es <code>04_ready_for_datastore.csv</code>. Los registros en
+        <code>05_review_required.csv</code> no deben avanzar hasta resolver fecha, sector o carpeta destino.
+      </div>
+    </section>
+
+    <section id="etapa-02" class="stage">
+      <div class="stage-header"><span class="stage-badge">02</span><h2>Cargar datastore y mosaic dataset</h2></div>
+      <p>
+        Copia las imagenes al datastore, las agrega al mosaic dataset, construye footprints y actualiza campos criticos.
+      </p>
+      <table>
+        <thead><tr><th>Elemento</th><th>Detalle</th></tr></thead>
+        <tbody>
+          <tr><td>Notebook</td><td><code>02_cargar_datastore_mosaico.ipynb</code></td></tr>
+          <tr><td>Documento detallado</td><td><a href="02_cargar_datastore_mosaico.html">02_cargar_datastore_mosaico.html</a></td></tr>
+          <tr><td>Entrada principal</td><td><code>04_ready_for_datastore.csv</code></td></tr>
+          <tr><td>Output clave</td><td><code>outputs/etapa_02_carga_datastore_mosaico/02_load_results.csv</code></td></tr>
+        </tbody>
+      </table>
+      <h3>Campos criticos actualizados</h3>
+      <ul>
+        <li><code>MaxPS = 10000</code>, <code>LowPS = 0.15</code>, <code>MinPS = 0</code>.</li>
+        <li><code>Sector</code>, <code>FechaAdqui</code>/<code>Fecha_Adqui</code>, <code>URL</code>, <code>Proyecto</code>, <code>Sensor</code>, <code>FechaCarga</code>/<code>Fecha_Publ</code>.</li>
+        <li><code>ProductName</code> o <code>ProductNam</code> toma el <code>OBJECTID</code> del registro del mosaico.</li>
+      </ul>
+      <div class="warn">
+        Ejecutar primero con <code>DRY_RUN = True</code>. Cambiar a <code>False</code> solo cuando los paths y atributos esten validados.
+      </div>
+    </section>
+
+    <section id="etapa-03" class="stage">
+      <div class="stage-header"><span class="stage-badge">03</span><h2>Actualizar footprints en indice de vuelos</h2></div>
+      <p>
+        Exporta las geometrías de las imagenes cargadas desde el mosaic dataset, las adapta al esquema del indice de
+        vuelos y recalcula <code>Nombre_de_Vuelo</code>.
+      </p>
+      <table>
+        <thead><tr><th>Elemento</th><th>Detalle</th></tr></thead>
+        <tbody>
+          <tr><td>Notebook</td><td><code>03_actualizar_footprints_indice.ipynb</code></td></tr>
+          <tr><td>Documento detallado</td><td><a href="03_actualizar_footprints_indice.html">03_actualizar_footprints_indice.html</a></td></tr>
+          <tr><td>Entrada principal</td><td><code>02_load_results.csv</code>, mosaic dataset, feature class indice.</td></tr>
+          <tr><td>Output clave</td><td><code>outputs/etapa_03_actualizar_footprints_indice/00_summary.csv</code></td></tr>
+        </tbody>
+      </table>
+      <h3>Operaciones</h3>
+      <ul>
+        <li><code>ExportMosaicDatasetGeometry</code> para nombres cargados.</li>
+        <li>Renombre de campos: <code>FechaAdqui -> Fecha_Adqu</code>, <code>FechaCarga -> Fecha_Publ</code>, <code>NombreVuelo -> Nombre_de_Vuelo</code>, <code>ProductName -> ProductNam</code>.</li>
+        <li><code>Append</code> al indice de vuelos.</li>
+        <li>Recalculo de <code>Nombre_de_Vuelo</code> con formato <code>NNN_yy_mm_dd_sector</code>, ordenado por <code>Name ASC</code>.</li>
+      </ul>
+    </section>
+
+    <section id="etapa-04" class="stage">
+      <div class="stage-header"><span class="stage-badge">04</span><h2>Normalizar imagenes con Rasterio</h2></div>
+      <p>
+        Genera versiones normalizadas de las imagenes usando el footprint como mascara, con salida RGB/alpha compatible
+        para ArcGIS.
+      </p>
+      <table>
+        <thead><tr><th>Elemento</th><th>Detalle</th></tr></thead>
+        <tbody>
+          <tr><td>Notebook</td><td><code>04_normalizar_imagenes_rasterio.ipynb</code></td></tr>
+          <tr><td>Documento detallado</td><td><a href="04_normalizar_imagenes_rasterio.html">04_normalizar_imagenes_rasterio.html</a></td></tr>
+          <tr><td>Entrada principal</td><td><code>02_load_results.csv</code> y feature class de footprints.</td></tr>
+          <tr><td>Output clave</td><td><code>outputs/etapa_04_normalizar_imagenes_rasterio/01_normalizacion_rasterio_resultados.csv</code></td></tr>
+        </tbody>
+      </table>
+      <h3>Normalizacion</h3>
+      <ul>
+        <li>Usa <code>rasterio.mask.mask</code> con <code>crop=True</code>.</li>
+        <li>Conserva RGB o convierte colormap de 1 banda a RGB.</li>
+        <li>Agrega banda alpha para transparencia limpia fuera del footprint.</li>
+        <li>Por defecto no reemplaza originales: <code>REPLACE_ORIGINALS = False</code>.</li>
+      </ul>
+      <div class="note">
+        Validar los TIF normalizados en <code>normalized_tif</code> antes de activar reemplazo de originales.
+      </div>
+    </section>
+
+    <section id="etapa-05" class="stage">
+      <div class="stage-header"><span class="stage-badge">05</span><h2>Preparar APRX para publicacion</h2></div>
+      <p>
+        Agrega las imagenes cargadas como capas raster directas en el APRX, dentro del grupo de imagenes drone, y deja
+        el proyecto listo para revision/publicacion.
+      </p>
+      <table>
+        <thead><tr><th>Elemento</th><th>Detalle</th></tr></thead>
+        <tbody>
+          <tr><td>Notebook</td><td><code>05_preparar_aprx_publicacion.ipynb</code></td></tr>
+          <tr><td>Documento detallado</td><td><a href="05_preparar_aprx_publicacion.html">05_preparar_aprx_publicacion.html</a></td></tr>
+          <tr><td>Entrada principal</td><td><code>02_load_results.csv</code> y APRX operativo.</td></tr>
+          <tr><td>Output clave</td><td><code>outputs/etapa_05_preparar_aprx_publicacion/01_aprx_update_results.csv</code></td></tr>
+        </tbody>
+      </table>
+      <h3>Reglas APRX</h3>
+      <ul>
+        <li>Grupo destino: <code>Vuelos Drone PAO > Imagenes Drone</code>.</li>
+        <li>Evita duplicados por equivalencias de nombre.</li>
+        <li>Renombra removiendo <code>CL_MLP_PAO_IF_Ortho_</code> y <code>.tif</code>.</li>
+        <li>Ordena de mas nueva a mas vieja.</li>
+        <li>Guarda copia de revision con <code>saveACopy</code> por defecto.</li>
+      </ul>
+      <div class="warn">
+        Mantener <code>SAVE_ORIGINAL_APRX = False</code> hasta revisar la copia generada en ArcGIS Pro.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Documento maestro asociado al directorio flujo_geosupport_etapas. Mantener sincronizado cuando cambien reglas de negocio o parametros operativos.
+  </footer>
+</body>
+</html>

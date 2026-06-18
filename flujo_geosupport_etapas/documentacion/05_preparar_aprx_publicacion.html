@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>05 - Preparar APRX para publicacion</title>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #17212b; line-height: 1.55; }
+    header { background: #102a3a; color: #fff; padding: 34px 42px; border-bottom: 5px solid #126c8f; }
+    header h1 { margin: 0 0 8px; font-size: 30px; font-weight: 650; }
+    header p { margin: 0; max-width: 980px; color: #d8e6ee; }
+    main { max-width: 1180px; margin: 0 auto; padding: 28px 34px 54px; }
+    h2 { margin: 34px 0 12px; font-size: 22px; color: #102a3a; border-bottom: 1px solid #d9e0e7; padding-bottom: 8px; }
+    code { font-family: Consolas, "Courier New", monospace; background: #eef3f7; padding: 2px 5px; border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0 22px; font-size: 14px; }
+    th, td { border: 1px solid #d9e0e7; padding: 9px 10px; vertical-align: top; text-align: left; }
+    th { background: #eaf1f6; color: #102a3a; font-weight: 650; }
+    tr:nth-child(even) td { background: #fafbfd; }
+    .note { border-left: 4px solid #126c8f; background: #f4f7fa; padding: 12px 14px; margin: 16px 0; }
+    .warn { border-left: 4px solid #a15c00; background: #fff8ee; padding: 12px 14px; margin: 16px 0; }
+    .path { display: block; margin: 10px 0; padding: 12px; background: #f7f9fb; border: 1px solid #d9e0e7; overflow-wrap: anywhere; }
+    footer { max-width: 1180px; margin: 0 auto; padding: 0 34px 34px; color: #5c6975; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>05 - Preparar APRX para publicacion</h1>
+    <p>Documentacion funcional de la etapa que deja el APRX listo para publicar imagenes referenciadas como capas raster fuera del Image Server.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Objetivo</h2>
+      <p>
+        Agregar al APRX las imagenes nuevas como capas raster directas, ubicarlas dentro del grupo operativo correcto,
+        renombrarlas y ordenarlas para que queden listas para revision/publicacion.
+      </p>
+      <div class="warn">
+        Por defecto se guarda una copia de revision del APRX con <code>saveACopy</code>. El APRX original solo se guarda
+        si <code>SAVE_ORIGINAL_APRX = True</code>.
+      </div>
+    </section>
+
+    <section>
+      <h2>Entradas</h2>
+      <table>
+        <thead><tr><th>Entrada</th><th>Descripcion</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td><code>02_load_results.csv</code></td><td>Resultado de etapa 2.</td><td>Entrega las rutas <code>destination_path</code> de las imagenes cargadas.</td></tr>
+          <tr><td><code>APRX_PATH</code></td><td>Ruta del APRX operativo PAO.</td><td>Proyecto base donde se agregan y ordenan las capas.</td></tr>
+          <tr><td><code>MAP_NAME</code></td><td>Mapa dentro del APRX.</td><td>Mapa donde existe el grupo de imagenes drone.</td></tr>
+          <tr><td><code>Vuelos Drone PAO &gt; Imagenes Drone</code></td><td>Grupo destino.</td><td>Las capas raster se insertan como hijas directas de este grupo.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Flujo</h2>
+      <ol>
+        <li>Leer las imagenes cargadas desde etapa 2.</li>
+        <li>Abrir el APRX con <code>arcpy.mp.ArcGISProject</code>.</li>
+        <li>Buscar el mapa y el grupo <code>Vuelos Drone PAO &gt; Imagenes Drone</code>.</li>
+        <li>Detectar capas ya existentes en el grupo para evitar duplicados.</li>
+        <li>Agregar las imagenes faltantes con <code>addDataFromPath</code> y <code>addLayerToGroup</code>.</li>
+        <li>Remover la capa temporal agregada fuera del grupo.</li>
+        <li>Renombrar capas quitando <code>CL_MLP_PAO_IF_Ortho_</code> y <code>.tif</code>.</li>
+        <li>Ordenar de fecha mas nueva a mas vieja.</li>
+        <li>Guardar copia de revision o APRX original segun parametros.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Renombrado</h2>
+      <p>El nombre visual de la capa se simplifica para publicacion:</p>
+      <code class="path">CL_MLP_PAO_IF_Ortho_26_05_08_DME_13.tif -> 26_05_08_DME_13</code>
+      <p>Tambien se limpian nombres temporales con prefijo <code>tmp_</code>.</p>
+    </section>
+
+    <section>
+      <h2>Orden</h2>
+      <p>
+        El orden se calcula desde el patron <code>yy_mm_dd_sector</code>. Las capas quedan de mas nuevas a mas viejas
+        dentro del grupo <code>Imagenes Drone</code>.
+      </p>
+      <div class="note">
+        El orden se aplica solo a las capas raster hijas directas del grupo, para evitar mover otros grupos o capas del mapa.
+      </div>
+    </section>
+
+    <section>
+      <h2>Salidas</h2>
+      <code class="path">flujo_geosupport_etapas\outputs\etapa_05_preparar_aprx_publicacion</code>
+      <table>
+        <thead><tr><th>Salida</th><th>Contenido</th></tr></thead>
+        <tbody>
+          <tr><td><code>00_summary.csv</code></td><td>Resumen de parametros, imagenes evaluadas y estados.</td></tr>
+          <tr><td><code>01_aprx_update_results.csv</code></td><td>Resultado por raster: agregado, omitido por existir o error.</td></tr>
+          <tr><td><code>APRX/*_verificacion_imagenes_drone.aprx</code></td><td>Copia de revision del APRX.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Criterio de validacion</h2>
+      <ol>
+        <li>Ejecutar con <code>SAVE_COPY_FOR_REVIEW = True</code> y <code>SAVE_ORIGINAL_APRX = False</code>.</li>
+        <li>Abrir la copia de revision en ArcGIS Pro.</li>
+        <li>Validar que las capas quedaron dentro de <code>Vuelos Drone PAO &gt; Imagenes Drone</code>.</li>
+        <li>Validar nombres sin prefijo ni extension.</li>
+        <li>Validar orden de mas nueva a mas vieja.</li>
+        <li>Si todo esta correcto, decidir si se guarda el APRX original o se usa la copia para publicacion.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>Documento asociado al notebook flujo_geosupport_etapas/05_preparar_aprx_publicacion.ipynb.</footer>
+</body>
+</html>
