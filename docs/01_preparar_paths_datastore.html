@@ -199,15 +199,16 @@
     <section>
       <h2>Objetivo</h2>
       <p>
-        Esta etapa recibe una carpeta con imagenes nuevas y genera la lista oficial de salida para el datastore:
-        origen, nombre final, carpeta destino, carpeta mensual y path completo de destino. La etapa no modifica
-        el datastore ni el mosaic dataset.
+        Esta etapa recibe una carpeta con imagenes nuevas y, cuando es necesario, una fuente auxiliar de fechas
+        en formato JSON o Excel. Con esos insumos genera la lista oficial de salida para el datastore: origen,
+        nombre final, carpeta destino, carpeta mensual y path completo de destino. La etapa no modifica el datastore
+        ni el mosaic dataset.
       </p>
       <div class="note">
         Regla central de nomenclatura: el nombre destino de cada imagen se construye con dos datos solamente:
-        la fecha de adquisicion y el sector obtenido por cruce espacial. La fecha puede venir del nombre del archivo
-        o de una fuente controlada como una tabla/diccionario JSON; el sector no se toma del nombre, siempre viene
-        del cruce geografico.
+        la fecha de adquisicion y el sector obtenido por cruce espacial. La fecha puede venir del nombre del archivo,
+        de un diccionario JSON o de un Excel de fechas recibido junto con la entrega; el sector no se toma del nombre,
+        siempre viene del cruce geografico.
       </div>
       <div class="note">
         Se asume que las imagenes recibidas en la carpeta de entrada son las imagenes que se quieren procesar.
@@ -237,6 +238,11 @@
             <td><code>json/fechas.json</code></td>
             <td>Diccionario opcional de fechas por nombre de archivo.</td>
             <td>Tiene prioridad sobre la fecha detectada desde el nombre. Permite procesar archivos sin patron de fecha o con nombres no estandar.</td>
+          </tr>
+          <tr>
+            <td>Excel de fechas en carpeta input</td>
+            <td>Tabla opcional entregada junto con las imagenes, con la relacion entre archivo y fecha de adquisicion.</td>
+            <td>Se usa como fuente alternativa cuando la fecha no viene en el nombre del archivo o cuando se requiere controlar la fecha desde una tabla de entrega.</td>
           </tr>
           <tr>
             <td><code>PATH_FC_INDICE_VUELOS_IMGS</code></td>
@@ -291,8 +297,9 @@
 
       <h3>Fecha de adquisicion</h3>
       <ul>
-        <li>Primero se busca la fecha en <code>json/fechas.json</code>, usando el nombre normalizado del archivo o el codigo <code>GEOSP-TRN</code>.</li>
-        <li>Si el archivo no esta en el diccionario, la fecha se obtiene desde el string del nombre original de la imagen.</li>
+        <li>Primero se busca la fecha en una fuente controlada de fechas: <code>json/fechas.json</code> o Excel de fechas asociado a la carpeta de entrada.</li>
+        <li>El mapeo de fechas puede usar el nombre normalizado del archivo o el codigo <code>GEOSP-TRN</code>.</li>
+        <li>Si el archivo no esta en una fuente controlada, la fecha se obtiene desde el string del nombre original de la imagen.</li>
         <li>La fecha se normaliza a token <code>YY_MM_DD</code>.</li>
         <li>Si no se detecta una fecha valida en ninguna fuente, el registro queda para revision y no se marca como listo.</li>
         <li>Los archivos con patron <code>DW</code> o <code>1001-03-T-CS</code> pueden prepararse si tienen fecha explicita en el diccionario y cruce espacial valido.</li>
