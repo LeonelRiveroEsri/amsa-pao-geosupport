@@ -265,7 +265,7 @@
         <thead><tr><th>Elemento</th><th>Participacion en el flujo</th></tr></thead>
         <tbody>
           <tr><td>Carpeta de imagenes nuevas</td><td>Origen de los TIF/TIFF que se incorporaran al proceso.</td></tr>
-          <tr><td>Diccionario de fechas</td><td><code>flujo_geosupport_etapas/json/fechas.json</code>. Resuelve casos donde el nombre de archivo no trae una fecha confiable.</td></tr>
+          <tr><td>Diccionario de fechas</td><td><code>flujo_geosupport_etapas/json/fechas.json</code> o archivo Excel de fechas en el directorio de entrada. Resuelve casos donde el nombre de archivo no trae una fecha confiable.</td></tr>
           <tr><td>Feature class de sectores</td><td>Poligonos del indice de vuelos PAO usados para determinar el sector por interseccion espacial.</td></tr>
           <tr><td>Sensor excluido</td><td>La regla principal excluye <code>DJI MATRICE 350 RTK</code>; si una imagen no cruza, se intenta una segunda busqueda contra ese sensor.</td></tr>
           <tr><td>Datastore destino</td><td>Raiz corporativa donde se arma la ruta final: carpeta por sector, carpeta mensual y nombre normalizado.</td></tr>
@@ -273,7 +273,8 @@
       </table>
       <h3>Reglas de nombre y destino</h3>
       <ul>
-        <li>La fecha se toma del nombre de archivo o del diccionario JSON cuando existe una regla explicita.</li>
+        <li>La fecha se toma del nombre de archivo cuando el patron es confiable.</li>
+        <li>Si la fecha no esta en el archivo, se espera un JSON o un Excel con el mapeo de fechas en el directorio de entrada para poder definir el nombre de salida.</li>
         <li>El sector se toma del poligono con mayor participacion espacial sobre la imagen.</li>
         <li>El nombre del sector se preserva tal como esta en la capa, sustituyendo espacios por guion bajo para el nombre de archivo.</li>
         <li>El resultado de nombre es <code>CL_MLP_PAO_IF_Ortho_YY_MM_DD_Sector.tif</code>.</li>
@@ -282,7 +283,8 @@
       </ul>
       <div class="note">
         La importancia de la fecha es que participa directamente en el nombre final, en la carpeta mensual y en los
-        atributos posteriores. Si la fecha no esta en el nombre, debe existir en una tabla o en el diccionario JSON.
+        atributos posteriores. Si la fecha no esta en el nombre, debe existir en una tabla Excel de la entrega o en un
+        diccionario JSON controlado.
       </div>
     </section>
 
