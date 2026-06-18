@@ -264,6 +264,7 @@
       <table>
         <thead><tr><th>Elemento</th><th>Participacion en el flujo</th></tr></thead>
         <tbody>
+          <tr><td>Documento de referencia</td><td><a href="01_preparar_paths_datastore.html">01_preparar_paths_datastore.html</a></td></tr>
           <tr><td>Carpeta de imagenes nuevas</td><td>Origen de los TIF/TIFF que se incorporaran al proceso.</td></tr>
           <tr><td>Diccionario de fechas</td><td><code>flujo_geosupport_etapas/json/fechas.json</code> o archivo Excel de fechas en el directorio de entrada. Resuelve casos donde el nombre de archivo no trae una fecha confiable.</td></tr>
           <tr><td>Feature class de sectores</td><td>Poligonos del indice de vuelos PAO usados para determinar el sector por interseccion espacial.</td></tr>
@@ -297,6 +298,7 @@
       <table>
         <thead><tr><th>Elemento</th><th>Participacion en el flujo</th></tr></thead>
         <tbody>
+          <tr><td>Documento de referencia</td><td><a href="02_cargar_datastore_mosaico.html">02_cargar_datastore_mosaico.html</a></td></tr>
           <tr><td>Manifest de paths</td><td>Lista de imagenes listas con path origen, path destino, fecha, sector y atributos derivados.</td></tr>
           <tr><td>Datastore</td><td>Repositorio fisico donde queda el TIF final, usando la nomenclatura PAO.</td></tr>
           <tr><td>Mosaic dataset</td><td>Dataset ArcGIS donde se registra cada raster para uso como image service.</td></tr>
@@ -332,6 +334,7 @@
       <table>
         <thead><tr><th>Elemento</th><th>Participacion en el flujo</th></tr></thead>
         <tbody>
+          <tr><td>Documento de referencia</td><td><a href="03_actualizar_footprints_indice.html">03_actualizar_footprints_indice.html</a></td></tr>
           <tr><td>Mosaic dataset</td><td>Fuente desde la que se exportan las geometrias footprint de las imagenes cargadas.</td></tr>
           <tr><td>GDB temporal</td><td>Espacio intermedio donde se prepara el esquema antes de anexar al indice definitivo.</td></tr>
           <tr><td>Feature class indice</td><td>Capa corporativa <code>CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO</code>, donde quedan las geometrias consultables.</td></tr>
@@ -361,6 +364,7 @@
       <table>
         <thead><tr><th>Elemento</th><th>Participacion en el flujo</th></tr></thead>
         <tbody>
+          <tr><td>Documento de referencia</td><td><a href="04_normalizar_imagenes_rasterio.html">04_normalizar_imagenes_rasterio.html</a></td></tr>
           <tr><td>Raster del datastore</td><td>Imagen ya copiada y registrada en el mosaico.</td></tr>
           <tr><td>Footprint</td><td>Poligono usado como limite de mascara para mantener solo el area valida.</td></tr>
           <tr><td>Rasterio</td><td>Motor de recorte y escritura para generar una salida RGB/alpha compatible con ArcGIS.</td></tr>
@@ -389,6 +393,7 @@
       <table>
         <thead><tr><th>Elemento</th><th>Participacion en el flujo</th></tr></thead>
         <tbody>
+          <tr><td>Documento de referencia</td><td><a href="05_preparar_aprx_publicacion.html">05_preparar_aprx_publicacion.html</a></td></tr>
           <tr><td>APRX operativo</td><td>Proyecto ArcGIS Pro usado para preparar la visualizacion PAO.</td></tr>
           <tr><td>Mapa destino</td><td><code>CL MLP PAO 27 Imagenes Aereas PAO Image Server</code>.</td></tr>
           <tr><td>Grupo destino</td><td><code>Vuelos Drone PAO &gt; Imagenes Drone</code>.</td></tr>
