@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>01 - Preparar paths destino para datastore</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17212b;
+      --muted: #5c6975;
+      --line: #d9e0e7;
+      --band: #f4f7fa;
+      --accent: #126c8f;
+      --ok: #12783f;
+      --warn: #a15c00;
+      --bad: #a32020;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+      line-height: 1.55;
+    }
+
+    header {
+      background: #102a3a;
+      color: #ffffff;
+      padding: 34px 42px;
+      border-bottom: 5px solid var(--accent);
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 0;
+      max-width: 980px;
+      color: #d8e6ee;
+      font-size: 16px;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 34px 54px;
+    }
+
+    h2 {
+      margin: 34px 0 12px;
+      font-size: 22px;
+      color: #102a3a;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 17px;
+      color: #19384a;
+    }
+
+    p {
+      margin: 8px 0 12px;
+    }
+
+    ul, ol {
+      margin-top: 8px;
+      padding-left: 24px;
+    }
+
+    li {
+      margin: 7px 0;
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      background: #eef3f7;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 0.94em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 22px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #eaf1f6;
+      color: #102a3a;
+      font-weight: 650;
+    }
+
+    tr:nth-child(even) td {
+      background: #fafbfd;
+    }
+
+    .note {
+      border-left: 4px solid var(--accent);
+      background: var(--band);
+      padding: 12px 14px;
+      margin: 16px 0;
+    }
+
+    .ok {
+      color: var(--ok);
+      font-weight: 650;
+    }
+
+    .warn {
+      color: var(--warn);
+      font-weight: 650;
+    }
+
+    .bad {
+      color: var(--bad);
+      font-weight: 650;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 16px 0 22px;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      padding: 13px;
+      min-height: 120px;
+    }
+
+    .step strong {
+      display: block;
+      color: #102a3a;
+      margin-bottom: 6px;
+    }
+
+    .path-example {
+      display: block;
+      margin: 10px 0;
+      padding: 12px;
+      background: #f7f9fb;
+      border: 1px solid var(--line);
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 34px 34px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      header {
+        padding: 26px 22px;
+      }
+
+      main {
+        padding: 22px 20px 42px;
+      }
+
+      .flow {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>01 - Preparar paths destino para datastore</h1>
+    <p>Informe funcional de la primera etapa del flujo Geosupport para nuevas imagenes PAO. El objetivo es preparar el manifiesto de rutas destino antes de copiar archivos o cargar el mosaico.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Objetivo</h2>
+      <p>
+        Esta etapa recibe una carpeta con imagenes nuevas y genera la lista oficial de salida para el datastore:
+        origen, nombre final, carpeta destino, carpeta mensual y path completo de destino. La etapa no modifica
+        el datastore ni el mosaic dataset.
+      </p>
+      <div class="note">
+        Regla central de nomenclatura: el nombre destino de cada imagen se construye con dos datos solamente:
+        la fecha de adquisicion y el sector obtenido por cruce espacial. La fecha puede venir del nombre del archivo
+        o de una fuente controlada como una tabla/diccionario JSON; el sector no se toma del nombre, siempre viene
+        del cruce geografico.
+      </div>
+      <div class="note">
+        Se asume que las imagenes recibidas en la carpeta de entrada son las imagenes que se quieren procesar.
+        En esta etapa no se valida si ya fueron cargadas antes en el mosaico, no se comparan contra inventarios
+        historicos y no se ejecutan controles de duplicidad contra el mosaic dataset. La revision se concentra en
+        preparar correctamente el destino esperado para la siguiente etapa.
+      </div>
+    </section>
+
+    <section>
+      <h2>Entrada</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Entrada</th>
+            <th>Descripcion</th>
+            <th>Uso en el flujo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>PATH_INPUT_IMAGENES</code></td>
+            <td>Carpeta raiz donde llegan las imagenes nuevas del vuelo.</td>
+            <td>Se recorre de forma recursiva, incluyendo subdirectorios.</td>
+          </tr>
+          <tr>
+            <td><code>json/fechas.json</code></td>
+            <td>Diccionario opcional de fechas por nombre de archivo.</td>
+            <td>Tiene prioridad sobre la fecha detectada desde el nombre. Permite procesar archivos sin patron de fecha o con nombres no estandar.</td>
+          </tr>
+          <tr>
+            <td><code>PATH_FC_INDICE_VUELOS_IMGS</code></td>
+            <td>Feature class con geometria de sectores o footprints de referencia.</td>
+            <td>Define el sector geografico que se usara en el nombre final de la imagen.</td>
+          </tr>
+          <tr>
+            <td><code>PATH_DATASTORE_DESTINO_RAIZ</code></td>
+            <td>Raiz del datastore de imagenes PAO.</td>
+            <td>Se combina con carpeta por sector, carpeta mensual y nombre final.</td>
+          </tr>
+          <tr>
+            <td><code>QUERY_INDICE_VUELOS</code></td>
+            <td>Filtro aplicado al feature class de sectores.</td>
+            <td>Permite excluir registros que no corresponden a este flujo, por ejemplo otro sensor.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Secuencia del flujo</h2>
+      <div class="flow">
+        <div class="step">
+          <strong>1. Buscar imagenes</strong>
+          Se leen los archivos dentro de la carpeta input y todos sus subdirectorios.
+        </div>
+        <div class="step">
+          <strong>2. Filtrar ortomosaicos</strong>
+          Para preparar carga al mosaico se consideran solo archivos <code>.tif</code> y <code>.tiff</code>.
+        </div>
+        <div class="step">
+          <strong>3. Cruzar espacialmente</strong>
+          Cada imagen se cruza contra el feature class de sectores para definir el sector dominante.
+        </div>
+        <div class="step">
+          <strong>4. Construir destino</strong>
+          Se genera nombre final, carpeta mensual y path completo en el datastore.
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Reglas de negocio</h2>
+
+      <h3>Busqueda de imagenes</h3>
+      <ul>
+        <li>La busqueda es recursiva desde <code>PATH_INPUT_IMAGENES</code>.</li>
+        <li>El manifest conserva el path original y el path relativo dentro de la carpeta de entrada.</li>
+        <li>Para esta etapa se preparan archivos <code>.tif</code> y <code>.tiff</code>; otros formatos pueden aparecer en el inventario inicial, pero no pasan como imagenes listas para mosaico.</li>
+      </ul>
+
+      <h3>Fecha de adquisicion</h3>
+      <ul>
+        <li>Primero se busca la fecha en <code>json/fechas.json</code>, usando el nombre normalizado del archivo o el codigo <code>GEOSP-TRN</code>.</li>
+        <li>Si el archivo no esta en el diccionario, la fecha se obtiene desde el string del nombre original de la imagen.</li>
+        <li>La fecha se normaliza a token <code>YY_MM_DD</code>.</li>
+        <li>Si no se detecta una fecha valida en ninguna fuente, el registro queda para revision y no se marca como listo.</li>
+        <li>Los archivos con patron <code>DW</code> o <code>1001-03-T-CS</code> pueden prepararse si tienen fecha explicita en el diccionario y cruce espacial valido.</li>
+      </ul>
+
+      <h3>Sector geografico</h3>
+      <ul>
+        <li>El sector no se infiere desde el nombre del archivo.</li>
+        <li>El sector se toma del cruce espacial con el feature class configurado.</li>
+        <li>Primero se usa la query principal de sectores: <code>Sensor <> 'DJI MATRICE 350 RTK'</code>.</li>
+        <li>El sensor <code>DJI MATRICE 350 RTK</code> queda excluido de la primera pasada porque corresponde a otro grupo de referencia.</li>
+        <li>Si una imagen no cruza ningun sector con la query principal, se intenta una segunda pasada solo para esas imagenes con la query invertida: <code>Sensor = 'DJI MATRICE 350 RTK'</code>.</li>
+        <li>Si una imagen cruza dos o mas sectores, se usa el sector con mayor porcentaje de interseccion.</li>
+        <li>El texto del sector se preserva tal como viene desde el feature class; solamente se reemplazan espacios por guion bajo.</li>
+        <li>Si la imagen no cruza ningun sector, el registro queda para revision.</li>
+      </ul>
+      <div class="note">
+        La columna <code>spatial_query_source</code> permite auditar si el sector salio de la query principal
+        (<code>query_principal</code>) o del intento contra el sensor excluido (<code>query_fallback_invertida</code>).
+      </div>
+
+      <h3>Nombre final</h3>
+      <p>El nombre final se construye con esta estructura:</p>
+      <code class="path-example">CL_MLP_PAO_IF_Ortho_YY_MM_DD_Sector.tif</code>
+      <p>
+        <code>YY_MM_DD</code> viene de la fecha de adquisicion. <code>Sector</code> viene del cruce espacial con el
+        feature class de sectores. Por eso una imagen no queda lista si falta fecha o si no cruza un sector valido.
+      </p>
+      <p>Ejemplo:</p>
+      <code class="path-example">CL_MLP_PAO_IF_Ortho_26_05_17_EV2.tif</code>
+
+      <h3>Duplicados</h3>
+      <ul>
+        <li>Si dos imagenes generan el mismo nombre final, el notebook agrega una secuencia al final.</li>
+        <li>La secuencia queda antes de la extension: <code>-1</code>, <code>-2</code>, etc.</li>
+        <li>Estos casos siguen pudiendo quedar listos para la etapa siguiente, pero se marcan en <code>review_reason</code> como <code>nombre_duplicado_resuelto</code>.</li>
+      </ul>
+
+      <h3>Carpeta destino</h3>
+      <p>
+        La carpeta de destino se resuelve con un diccionario de sectores validado para el proyecto. Primero se revisan
+        excepciones por nombre original de archivo; si no aplica una excepcion, se usa la regla por sector.
+      </p>
+      <p>La ruta final queda con esta forma:</p>
+      <code class="path-example">\\servidor\CL_MLP_PAO\Carpeta_Drone\YY_MM\CL_MLP_PAO_IF_Ortho_YY_MM_DD_Sector.tif</code>
+    </section>
+
+    <section>
+      <h2>Diccionarios de nomenclatura</h2>
+      <p>
+        La etapa usa diccionarios simples para transformar el resultado geografico en una ruta de datastore. Estos
+        diccionarios son parte de la configuracion funcional del flujo y deben mantenerse actualizados cuando lleguen
+        nuevos sectores o nuevas excepciones.
+      </p>
+
+      <h3>Diccionario sector a carpeta destino</h3>
+      <p>
+        Este diccionario indica en que carpeta principal del datastore debe quedar una imagen segun el sector obtenido
+        por cruce espacial. La llave es el sector normalizado que viene del feature class y el valor es la carpeta de
+        salida dentro de <code>PATH_DATASTORE_DESTINO_RAIZ</code>.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Sector detectado</th>
+            <th>Carpeta destino</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Camino_Alternativo_Salamanca</code></td><td><code>El_Mauro_Drone</code></td></tr>
+          <tr><td><code>DME9-PA12-IIFF8</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>EBD</code></td><td><code>El_Mauro_Drone</code></td></tr>
+          <tr><td><code>ED1</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>ED2</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>EDT</code></td><td><code>Puerto_Punta_Chungo_Drone</code></td></tr>
+          <tr><td><code>EM1</code></td><td><code>Chacay_Drone</code></td></tr>
+          <tr><td><code>EM2_S2</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>EM3</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>Estacion_Cabecera</code></td><td><code>Chacay_Drone</code></td></tr>
+          <tr><td><code>Estacion_Intermedia</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>EV1</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>EV2</code></td><td><code>El_Mauro_Puerto_Punta_Chungo_Drone</code></td></tr>
+          <tr><td><code>Helipuerto</code></td><td><code>El_Mauro_Drone</code></td></tr>
+          <tr><td><code>MonteAranda-NSTC-Km-84p2-a-82p3</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>Patio-19B-y-Armado</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>Subestacion-El-Mauro</code></td><td><code>El_Mauro_Drone</code></td></tr>
+          <tr><td><code>Subestacion-El-Mauro_A_E35</code></td><td><code>El_Mauro_Drone</code></td></tr>
+          <tr><td><code>TORRE_E85_A_E_125</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>TORRES_E31_A_E48_PV4</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>TORRES_E48_A_E84_PV4</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Cuando agregar un nuevo sector</h3>
+      <p>
+        Si el cruce espacial encuentra un sector valido pero el manifest queda con
+        <code>review_reason = sin_regla_carpeta_destino</code>, significa que el sector existe en el feature class,
+        pero aun no tiene carpeta destino configurada. En ese caso se debe agregar una entrada nueva al diccionario
+        <code>DESTINATION_FOLDER_BY_SECTOR</code> del notebook.
+      </p>
+      <p>La nueva entrada debe respetar esta forma:</p>
+      <code class="path-example">'Nombre_Sector_Del_Feature': 'Carpeta_Drone_Destino'</code>
+
+      <h3>Excepciones por nombre original</h3>
+      <p>
+        Antes de aplicar la regla por sector, el flujo revisa un segundo diccionario de excepciones por nombre original
+        de archivo. Este diccionario se usa solo cuando un archivo puntual debe ir a una carpeta distinta a la regla
+        general del sector.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre original</th>
+            <th>Carpeta destino forzada</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>GEOSP-TRN-002603_ORTOFOTO_CORTADA_EM2_100526.tif</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>GEOSP-TRN-002615_GS_ORTOFOTO_ESTACION DE MONITOREO NÂ°2_13-05-2026.tif</code></td><td><code>El_Mauro_Drone</code></td></tr>
+          <tr><td><code>GEOSP-TRN-002617_GS_ORTOFOTO_SUBESTACION_EL MAURO_PRIORIDAD 1_13_05_26.tif</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>GEOSP-TRN-002545_GS_ORTOFOTO_EB3_06-05-26.tif</code></td><td><code>El_Mauro_Drone</code></td></tr>
+          <tr><td><code>GEOSP-TRN-002546_GS_ORTOFOTO_SSEE_06-05-26.tif</code></td><td><code>El_Mauro_Drone</code></td></tr>
+          <tr><td><code>GEOSP-TRN-002621_GS_ORTOFOTO_ESTACION DE BOMBEO NÂº3_13_05_26.tif</code></td><td><code>El_Mauro_Drone</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        Recomendacion operativa: si aparece un nuevo sector, primero confirmar con el cliente o con el responsable SIG
+        en que carpeta del datastore debe quedar. Luego agregarlo al diccionario por sector y volver a ejecutar esta
+        etapa para regenerar los CSV.
+      </div>
+    </section>
+
+    <section>
+      <h2>Resultado esperado</h2>
+      <p>
+        Los resultados se escriben siempre en la misma carpeta de salida de la etapa. Cada ejecucion reemplaza los CSV
+        anteriores, para mantener un unico resultado vigente.
+      </p>
+      <code class="path-example">flujo_geosupport_etapas\outputs\etapa_01_preparar_paths_datastore</code>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Archivo</th>
+            <th>Contenido</th>
+            <th>Uso recomendado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>00_summary.csv</code></td>
+            <td>Resumen de ejecucion, parametros, totales y estados principales.</td>
+            <td>Validar rapidamente si la corrida encontro imagenes y cuantos registros quedaron listos.</td>
+          </tr>
+          <tr>
+            <td><code>01_input_images.csv</code></td>
+            <td>Inventario de archivos encontrados en la carpeta input.</td>
+            <td>Revisar que la carpeta input usada sea la correcta.</td>
+          </tr>
+          <tr>
+            <td><code>02_spatial_matches.csv</code></td>
+            <td>Resultado del cruce espacial por imagen.</td>
+            <td>Revisar sector asignado, porcentaje de interseccion y casos con multiples sectores.</td>
+          </tr>
+          <tr>
+            <td><code>03_manifest_paths_datastore.csv</code></td>
+            <td>Manifest completo con todos los registros evaluados.</td>
+            <td>Auditoria general de origen, nombre esperado, destino y estados.</td>
+          </tr>
+          <tr>
+            <td><code>04_ready_for_datastore.csv</code></td>
+            <td>Solo imagenes con nombre final y path destino completos.</td>
+            <td><span class="ok">Archivo principal para la etapa siguiente</span>: copia al datastore y carga al mosaico.</td>
+          </tr>
+          <tr>
+            <td><code>05_review_required.csv</code></td>
+            <td>Imagenes que no quedaron listas para copiar.</td>
+            <td>Resolver problemas de fecha, sector o regla de carpeta antes de continuar.</td>
+          </tr>
+          <tr>
+            <td><code>06_date_dictionary.csv</code></td>
+            <td>Lectura normalizada del diccionario <code>json/fechas.json</code>.</td>
+            <td>Validar que las fechas entregadas sean validas y hayan sido interpretadas por el flujo.</td>
+          </tr>
+          <tr>
+            <td><code>07_spatial_no_match_diagnostics.csv</code></td>
+            <td>Diagnostico de coordenadas para imagenes que no cruzaron sector.</td>
+            <td>Revisar sistema de coordenadas, extent y centroide del raster en su SR original y proyectado al SR del feature class.</td>
+          </tr>
+          <tr>
+            <td><code>Dataset\data.gdb\spatial_no_match_extents</code></td>
+            <td>Feature class con rectangulos de extent de las imagenes sin cruce espacial.</td>
+            <td>Revision visual en ArcGIS Pro. Incluye atributos como nombre de archivo, path de imagen, SR y centroides.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Como interpretar el manifest</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Interpretacion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>ready_for_datastore</code></td>
+            <td><span class="ok">True</span> significa que la imagen tiene nombre y destino completos para la siguiente etapa.</td>
+          </tr>
+          <tr>
+            <td><code>review_reason</code></td>
+            <td>Explica por que conviene revisar el registro. Puede indicar falta de fecha, falta de regla de carpeta, cruce con multiples sectores o nombre duplicado resuelto.</td>
+          </tr>
+          <tr>
+            <td><code>path</code></td>
+            <td>Ruta original de la imagen dentro del input.</td>
+          </tr>
+          <tr>
+            <td><code>expected_file_name</code></td>
+            <td>Nombre oficial que deberia tener la imagen en el datastore.</td>
+          </tr>
+          <tr>
+            <td><code>destination_path</code></td>
+            <td>Ruta completa donde se copiara la imagen en la etapa siguiente.</td>
+          </tr>
+          <tr>
+            <td><code>expected_date_token</code></td>
+            <td>Fecha detectada desde el nombre original en formato <code>YY_MM_DD</code>.</td>
+          </tr>
+          <tr>
+            <td><code>date_source</code></td>
+            <td>Indica si la fecha vino del diccionario <code>date_dictionary</code> o del nombre del archivo <code>file_name</code>.</td>
+          </tr>
+          <tr>
+            <td><code>spatial_query_source</code></td>
+            <td>Indica si el sector fue obtenido con la query principal o con la query fallback invertida.</td>
+          </tr>
+          <tr>
+            <td><code>spatial_sector_raw</code></td>
+            <td>Sector original del feature class, usado como fuente del nombre geografico.</td>
+          </tr>
+          <tr>
+            <td><code>spatial_overlap_pct</code></td>
+            <td>Porcentaje de interseccion con el sector seleccionado. Sirve para revisar confianza cuando cruza multiples sectores.</td>
+          </tr>
+          <tr>
+            <td><code>duplicate_was_resolved</code></td>
+            <td>Indica que se agrego una secuencia al nombre final para evitar colision.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Criterio para avanzar</h2>
+      <ol>
+        <li>Revisar que <code>00_summary.csv</code> muestre la cantidad esperada de imagenes TIF/TIFF.</li>
+        <li>Abrir <code>04_ready_for_datastore.csv</code> y validar visualmente <code>path</code>, <code>expected_file_name</code> y <code>destination_path</code>.</li>
+        <li>Revisar <code>05_review_required.csv</code>. Si tiene registros, decidir si se corrigen reglas o si se excluyen de la siguiente etapa.</li>
+        <li>Usar <code>04_ready_for_datastore.csv</code> como entrada de la etapa de copia al datastore.</li>
+      </ol>
+      <div class="note">
+        Esta etapa prepara paths y nombres. La validacion de carga efectiva, actualizacion de atributos del mosaico,
+        normalizacion de imagenes, construccion de footprints y publicacion en APRX pertenecen a etapas posteriores.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Documento asociado al notebook flujo_geosupport_etapas/01_preparar_paths_datastore.ipynb.
+  </footer>
+</body>
+</html>

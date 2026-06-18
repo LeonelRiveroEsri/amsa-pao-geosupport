@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>02 - Cargar datastore y mosaic dataset</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17212b;
+      --muted: #5c6975;
+      --line: #d9e0e7;
+      --band: #f4f7fa;
+      --accent: #126c8f;
+      --ok: #12783f;
+      --warn: #a15c00;
+      --bad: #a32020;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+      line-height: 1.55;
+    }
+
+    header {
+      background: #102a3a;
+      color: #ffffff;
+      padding: 34px 42px;
+      border-bottom: 5px solid var(--accent);
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 0;
+      max-width: 980px;
+      color: #d8e6ee;
+      font-size: 16px;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 34px 54px;
+    }
+
+    h2 {
+      margin: 34px 0 12px;
+      font-size: 22px;
+      color: #102a3a;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 17px;
+      color: #19384a;
+    }
+
+    p {
+      margin: 8px 0 12px;
+    }
+
+    ul, ol {
+      margin-top: 8px;
+      padding-left: 24px;
+    }
+
+    li {
+      margin: 7px 0;
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      background: #eef3f7;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 0.94em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 22px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #eaf1f6;
+      color: #102a3a;
+      font-weight: 650;
+    }
+
+    tr:nth-child(even) td {
+      background: #fafbfd;
+    }
+
+    .note {
+      border-left: 4px solid var(--accent);
+      background: var(--band);
+      padding: 12px 14px;
+      margin: 16px 0;
+    }
+
+    .warnbox {
+      border-left: 4px solid var(--warn);
+      background: #fff8ee;
+      padding: 12px 14px;
+      margin: 16px 0;
+    }
+
+    .ok {
+      color: var(--ok);
+      font-weight: 650;
+    }
+
+    .warn {
+      color: var(--warn);
+      font-weight: 650;
+    }
+
+    .bad {
+      color: var(--bad);
+      font-weight: 650;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 16px 0 22px;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      padding: 13px;
+      min-height: 128px;
+    }
+
+    .step strong {
+      display: block;
+      color: #102a3a;
+      margin-bottom: 6px;
+    }
+
+    .path-example {
+      display: block;
+      margin: 10px 0;
+      padding: 12px;
+      background: #f7f9fb;
+      border: 1px solid var(--line);
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 34px 34px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      header {
+        padding: 26px 22px;
+      }
+
+      main {
+        padding: 22px 20px 42px;
+      }
+
+      .flow {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>02 - Cargar datastore y mosaic dataset</h1>
+    <p>Informe funcional de la segunda etapa del flujo Geosupport. Esta etapa copia las imagenes al datastore, las agrega al mosaic dataset, construye footprints y actualiza los campos criticos.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Objetivo</h2>
+      <p>
+        Ejecutar la carga operativa de las imagenes que ya fueron preparadas en la etapa 1. La entrada principal es
+        <code>04_ready_for_datastore.csv</code>, donde cada registro ya tiene ruta origen, nombre oficial y ruta destino
+        completa en el datastore.
+      </p>
+      <div class="warnbox">
+        Esta etapa si puede escribir archivos en el datastore y modificar el mosaic dataset. Por eso el notebook queda
+        configurado con <code>DRY_RUN = True</code> por defecto. La carga real solo debe ejecutarse despues de revisar
+        el manifest y cambiar <code>DRY_RUN = False</code>.
+      </div>
+    </section>
+
+    <section>
+      <h2>Entrada</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Entrada</th>
+            <th>Descripcion</th>
+            <th>Uso</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>READY_FOR_DATASTORE_CSV</code></td>
+            <td>CSV <code>04_ready_for_datastore.csv</code> generado por la etapa 1.</td>
+            <td>Define que imagenes se copiaran y cargaran.</td>
+          </tr>
+          <tr>
+            <td><code>PATH_MOSAIC_DATASET</code></td>
+            <td>Mosaic dataset corporativo donde se agregan las imagenes.</td>
+            <td>Destino de <code>AddRastersToMosaicDataset</code>, <code>BuildFootprints</code> y actualizacion de atributos.</td>
+          </tr>
+          <tr>
+            <td><code>destination_path</code></td>
+            <td>Path destino de cada imagen en el datastore.</td>
+            <td>Se usa para copiar el archivo y luego como input de carga al mosaico.</td>
+          </tr>
+          <tr>
+            <td><code>expected_name</code></td>
+            <td>Nombre oficial sin extension.</td>
+            <td>Se usa como valor del campo <code>Name</code> para buscar y actualizar el registro en el mosaico.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Secuencia del flujo</h2>
+      <div class="flow">
+        <div class="step">
+          <strong>1. Leer manifest</strong>
+          Se cargan los registros listos desde <code>04_ready_for_datastore.csv</code>.
+        </div>
+        <div class="step">
+          <strong>2. Copiar al datastore</strong>
+          Se copia cada imagen desde <code>path</code> hacia <code>destination_path</code>.
+        </div>
+        <div class="step">
+          <strong>3. Agregar al mosaico</strong>
+          Se ejecuta <code>AddRastersToMosaicDataset</code> usando el archivo ya ubicado en el datastore.
+        </div>
+        <div class="step">
+          <strong>4. Footprint y atributos</strong>
+          Se construye el footprint y se actualizan campos criticos del registro cargado.
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Copia al datastore</h2>
+      <p>
+        La copia usa la ruta original de la etapa 1 y la ruta destino calculada. La carpeta destino se crea si no existe.
+        Si el archivo ya existe y <code>OVERWRITE_COPY = False</code>, la copia no reemplaza el archivo y el estado queda
+        como <code>already_exists</code>.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Parametro</th>
+            <th>Valor recomendado</th>
+            <th>Interpretacion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>DRY_RUN</code></td>
+            <td><code>True</code> para validar, <code>False</code> para ejecutar.</td>
+            <td>Controla si la etapa escribe realmente o solo simula.</td>
+          </tr>
+          <tr>
+            <td><code>OVERWRITE_COPY</code></td>
+            <td><code>False</code></td>
+            <td>Evita reemplazar imagenes ya existentes en el datastore.</td>
+          </tr>
+          <tr>
+            <td><code>SKIP_EXISTING_MOSAIC_NAME</code></td>
+            <td><code>True</code></td>
+            <td>Evita agregar al mosaico un registro si ya existe el mismo <code>Name</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Metodo Add Raster</h2>
+      <p>
+        La carga al mosaic dataset se realiza con <code>arcpy.management.AddRastersToMosaicDataset</code>. El raster que
+        se agrega es el archivo copiado al datastore, no el archivo original de entrada.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Parametro ArcPy</th>
+            <th>Valor usado</th>
+            <th>Motivo funcional</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>in_mosaic_dataset</code></td><td><code>PATH_MOSAIC_DATASET</code></td><td>Mosaico corporativo de ortoimagenes PAO.</td></tr>
+          <tr><td><code>raster_type</code></td><td><code>Raster Dataset</code></td><td>Las entradas son archivos raster TIF ya ubicados en el datastore.</td></tr>
+          <tr><td><code>input_path</code></td><td><code>destination_path</code></td><td>Se registra la ruta final oficial, no la ruta temporal de entrada.</td></tr>
+          <tr><td><code>update_cellsize_ranges</code></td><td><code>NO_CELL_SIZES</code></td><td>No recalcula rangos de celda durante la insercion.</td></tr>
+          <tr><td><code>update_boundary</code></td><td><code>NO_BOUNDARY</code></td><td>La actualizacion de boundary no se fuerza en cada raster agregado.</td></tr>
+          <tr><td><code>update_overviews</code></td><td><code>NO_OVERVIEWS</code></td><td>No genera overviews en esta etapa.</td></tr>
+          <tr><td><code>minimum_dimension</code></td><td><code>1500</code></td><td>Parametro conservado del flujo validado para estas imagenes.</td></tr>
+          <tr><td><code>sub_folder</code></td><td><code>NO_SUBFOLDERS</code></td><td>Se agrega el raster puntual, no se escanea una carpeta completa.</td></tr>
+          <tr><td><code>duplicate_items_action</code></td><td><code>ALLOW_DUPLICATES</code></td><td>La proteccion principal se hace antes por <code>Name</code>; ArcPy queda permisivo para no bloquear casos controlados.</td></tr>
+          <tr><td><code>build_pyramids</code></td><td><code>BUILD_PYRAMIDS</code></td><td>Prepara piramides para visualizacion eficiente.</td></tr>
+          <tr><td><code>calculate_statistics</code></td><td><code>CALCULATE_STATISTICS</code></td><td>Calcula estadisticas del raster para mejorar visualizacion y comportamiento del mosaico.</td></tr>
+          <tr><td><code>build_thumbnails</code></td><td><code>NO_THUMBNAILS</code></td><td>No genera miniaturas en esta etapa.</td></tr>
+          <tr><td><code>force_spatial_reference</code></td><td><code>NO_FORCE_SPATIAL_REFERENCE</code></td><td>Respeta la referencia espacial del raster.</td></tr>
+          <tr><td><code>estimate_statistics</code></td><td><code>NO_STATISTICS</code></td><td>No estima estadisticas adicionales.</td></tr>
+          <tr><td><code>enable_pixel_cache</code></td><td><code>NO_PIXEL_CACHE</code></td><td>No activa cache de pixeles.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Metodo Build Footprints</h2>
+      <p>
+        Despues de agregar cada raster, se ejecuta <code>arcpy.management.BuildFootprints</code> filtrando por el
+        <code>Name</code> de la imagen cargada. Esto evita recalcular footprints de todo el mosaic dataset.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Parametro</th>
+            <th>Valor</th>
+            <th>Descripcion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>where_clause</code></td><td><code>Name = '&lt;Name&gt;'</code></td><td>Limita el proceso al raster recien cargado.</td></tr>
+          <tr><td><code>method</code></td><td><code>RADIOMETRY</code></td><td>Calcula el footprint usando informacion radiometrica del raster.</td></tr>
+          <tr><td><code>min_region_size</code></td><td><code>15</code></td><td>Tamano minimo de regiones consideradas.</td></tr>
+          <tr><td><code>max_region_size</code></td><td><code>245</code></td><td>Tamano maximo de regiones consideradas.</td></tr>
+          <tr><td><code>smoothing</code></td><td><code>10000</code></td><td>Suavizado aplicado al footprint.</td></tr>
+          <tr><td><code>simplify</code></td><td><code>5</code></td><td>Simplificacion de geometria.</td></tr>
+          <tr><td><code>maintain_edges</code></td><td><code>NO_MAINTAIN_EDGES</code></td><td>No fuerza mantener bordes originales.</td></tr>
+          <tr><td><code>derived_images</code></td><td><code>SKIP_DERIVED_IMAGES</code></td><td>No procesa imagenes derivadas.</td></tr>
+          <tr><td><code>update_boundary</code></td><td><code>UPDATE_BOUNDARY</code></td><td>Actualiza boundary segun el footprint construido.</td></tr>
+          <tr><td><code>max_vertices</code></td><td><code>2000</code></td><td>Limita complejidad de la geometria resultante.</td></tr>
+          <tr><td><code>max_sliver_size</code></td><td><code>100</code></td><td>Controla pequenas geometrias residuales.</td></tr>
+          <tr><td><code>min_thinness_ratio</code></td><td><code>NONE</code></td><td>No aplica filtro minimo de delgadez.</td></tr>
+          <tr><td><code>shrink_distance</code></td><td><code>20</code></td><td>Reduce bordes para evitar areas no validas.</td></tr>
+          <tr><td><code>simplify_tolerance</code></td><td><code>0.05</code></td><td>Tolerancia final de simplificacion.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Actualizacion de campos criticos</h2>
+      <p>
+        La actualizacion se hace con <code>arcpy.da.UpdateCursor</code> filtrando por <code>Name</code>. El flujo revisa
+        que campos existen en el mosaic dataset y actualiza solo los disponibles. Los campos inexistentes quedan
+        reportados como <code>attribute_missing_fields</code>.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Campo del mosaico</th>
+            <th>Valor asignado</th>
+            <th>Regla</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MaxPS</code></td><td><code>10000</code></td><td>Valor fijo estandar del flujo.</td></tr>
+          <tr><td><code>LowPS</code></td><td><code>0.15</code></td><td>Valor fijo estandar del flujo.</td></tr>
+          <tr><td><code>MinPS</code></td><td><code>0</code></td><td>Valor fijo solicitado para esta carga.</td></tr>
+          <tr><td><code>Sector</code></td><td><code>spatial_sector_raw</code></td><td>Sector original del feature class, calculado en etapa 1 por cruce espacial.</td></tr>
+          <tr><td><code>FechaAdqui</code> / <code>Fecha_Adqui</code></td><td>Fecha ISO desde <code>expected_date_token</code></td><td>Convierte <code>YY_MM_DD</code> a <code>YYYY-MM-DD</code>.</td></tr>
+          <tr><td><code>URL</code></td><td>URL ImageServer con ruta relativa del datastore</td><td>Construida como referencia al archivo publicado en el servicio de imagen.</td></tr>
+          <tr><td><code>Proyecto</code></td><td><code>PAO</code></td><td>Valor fijo del proyecto.</td></tr>
+          <tr><td><code>Sensor</code></td><td><code>DJI Mavic Enterprise</code></td><td>Valor fijo para esta familia de imagenes.</td></tr>
+          <tr><td><code>FechaCarga</code> / <code>Fecha_Publ</code></td><td>Fecha actual de ejecucion</td><td>Registra la fecha en que se publica/carga la imagen.</td></tr>
+          <tr><td><code>ProductName</code> o <code>ProductNam</code></td><td><code>OBJECTID</code> del registro en el mosaic dataset</td><td>Se toma del registro encontrado por <code>Name</code>. Si el campo es texto, se guarda como texto; si es numerico, se guarda como numero.</td></tr>
+        </tbody>
+      </table>
+      <div class="note">
+        La actualizacion del campo de producto ocurre despues de agregar el raster, porque el <code>OBJECTID</code> solo
+        existe cuando el registro ya fue creado en el mosaic dataset.
+      </div>
+    </section>
+
+    <section>
+      <h2>Resultados de salida</h2>
+      <p>
+        La etapa escribe resultados en una carpeta fija. Cada ejecucion reemplaza los CSV previos para mantener un unico
+        resultado vigente.
+      </p>
+      <code class="path-example">flujo_geosupport_etapas\outputs\etapa_02_carga_datastore_mosaico</code>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Archivo</th>
+            <th>Contenido</th>
+            <th>Uso recomendado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>00_summary.csv</code></td>
+            <td>Resumen de parametros, cantidad de registros y estados principales.</td>
+            <td>Validar resultado general de la corrida.</td>
+          </tr>
+          <tr>
+            <td><code>01_load_input_with_attributes.csv</code></td>
+            <td>Manifest enriquecido con todos los campos criticos calculados antes de cargar.</td>
+            <td>Auditar los valores que se intentaran actualizar en el mosaico.</td>
+          </tr>
+          <tr>
+            <td><code>02_load_results.csv</code></td>
+            <td>Resultado por imagen: copia, carga al mosaico, footprint, atributos y estado final.</td>
+            <td>Archivo principal para revisar la ejecucion.</td>
+          </tr>
+          <tr>
+            <td><code>03_errors_review.csv</code></td>
+            <td>Subconjunto de registros con error, faltantes o estados no encontrados.</td>
+            <td>Revisar antes de pasar a normalizacion o publicacion.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Interpretacion de estados</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Estado</th>
+            <th>Significado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>copy_status</code></td><td><code>copied</code></td><td>Archivo copiado correctamente al datastore.</td></tr>
+          <tr><td><code>copy_status</code></td><td><code>already_exists</code></td><td>El archivo ya estaba en destino y no se reemplazo.</td></tr>
+          <tr><td><code>copy_status</code></td><td><code>source_missing</code></td><td>No existe el archivo origen del manifest.</td></tr>
+          <tr><td><code>mosaic_add_status</code></td><td><code>added</code></td><td>Raster agregado al mosaic dataset.</td></tr>
+          <tr><td><code>mosaic_add_status</code></td><td><code>already_exists</code></td><td>Ya existia un registro con el mismo <code>Name</code>.</td></tr>
+          <tr><td><code>footprint_status</code></td><td><code>built</code></td><td>Footprint construido correctamente.</td></tr>
+          <tr><td><code>attribute_status</code></td><td><code>updated</code></td><td>Campos criticos actualizados.</td></tr>
+          <tr><td><code>overall_status</code></td><td><code>ok</code></td><td>La imagen completo la etapa.</td></tr>
+          <tr><td><code>overall_status</code></td><td><code>dry_run</code></td><td>La etapa fue simulada sin escritura real.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Criterio para avanzar</h2>
+      <ol>
+        <li>Ejecutar primero con <code>DRY_RUN = True</code> y revisar <code>01_load_input_with_attributes.csv</code>.</li>
+        <li>Confirmar que <code>Name</code>, <code>Path_Destino</code>, <code>Sector</code>, <code>Fecha_Adqui</code> y <code>URL</code> estan correctos.</li>
+        <li>Cambiar a <code>DRY_RUN = False</code> para ejecutar la carga real.</li>
+        <li>Revisar <code>02_load_results.csv</code> y confirmar <code>overall_status = ok</code> para las imagenes procesadas.</li>
+        <li>Resolver cualquier registro en <code>03_errors_review.csv</code> antes de pasar a etapas posteriores.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    Documento asociado al notebook flujo_geosupport_etapas/02_cargar_datastore_mosaico.ipynb.
+  </footer>
+</body>
+</html>
