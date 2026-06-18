@@ -906,6 +906,7 @@ def add_expected_names_with_spatial_sector(
         "spatial_overlap_count",
         "spatial_all_matches",
         "spatial_error",
+        "spatial_query_source",
     ]
     available_spatial_columns = [column for column in spatial_columns if column in spatial_sector_df.columns]
     merged_df = ortho_images_df.merge(

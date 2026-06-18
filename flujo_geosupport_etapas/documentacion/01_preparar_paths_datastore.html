@@ -296,6 +296,7 @@
       <ul>
         <li>El sector no se infiere desde el nombre del archivo.</li>
         <li>El sector se toma del cruce espacial con el feature class configurado.</li>
+        <li>Primero se usa la query principal de sectores. Si una imagen no cruza, se intenta una segunda pasada con la query invertida.</li>
         <li>Si una imagen cruza dos o mas sectores, se usa el sector con mayor porcentaje de interseccion.</li>
         <li>El texto del sector se preserva tal como viene desde el feature class; solamente se reemplazan espacios por guion bajo.</li>
         <li>Si la imagen no cruza ningun sector, el registro queda para revision.</li>
@@ -512,6 +513,10 @@
           <tr>
             <td><code>date_source</code></td>
             <td>Indica si la fecha vino del diccionario <code>date_dictionary</code> o del nombre del archivo <code>file_name</code>.</td>
+          </tr>
+          <tr>
+            <td><code>spatial_query_source</code></td>
+            <td>Indica si el sector fue obtenido con la query principal o con la query fallback invertida.</td>
           </tr>
           <tr>
             <td><code>spatial_sector_raw</code></td>
