@@ -770,6 +770,123 @@ def calculate_spatial_sector_matches(
     return pd.DataFrame(rows, columns=columns)
 
 
+def export_no_match_extent_features(
+    spatial_matches_df: pd.DataFrame,
+    output_gdb: str | Path,
+    feature_class_name: str = "spatial_no_match_extents",
+) -> str | None:
+    """Exporta rectangulos de extent para imagenes sin cruce espacial.
+
+    Usa las coordenadas target_* calculadas en calculate_spatial_sector_matches,
+    normalmente en el SR del feature class de sectores.
+    """
+    import arcpy
+
+    required_columns = ["target_xmin", "target_ymin", "target_xmax", "target_ymax"]
+    if spatial_matches_df.empty or not all(column in spatial_matches_df.columns for column in required_columns):
+        return None
+
+    no_match_df = spatial_matches_df[spatial_matches_df["spatial_status"].ne("ok")].copy()
+    if no_match_df.empty:
+        return None
+
+    output_gdb = Path(output_gdb)
+    output_gdb.parent.mkdir(parents=True, exist_ok=True)
+    if not arcpy.Exists(str(output_gdb)):
+        arcpy.management.CreateFileGDB(str(output_gdb.parent), output_gdb.name)
+
+    output_fc = str(output_gdb / feature_class_name)
+    if arcpy.Exists(output_fc):
+        arcpy.management.Delete(output_fc)
+
+    sr_code = None
+    if "target_sr_factory_code" in no_match_df.columns:
+        valid_sr_codes = no_match_df["target_sr_factory_code"].dropna().astype(str)
+        if not valid_sr_codes.empty and valid_sr_codes.iloc[0].isdigit():
+            sr_code = int(valid_sr_codes.iloc[0])
+    spatial_reference = arcpy.SpatialReference(sr_code or 3857)
+
+    arcpy.management.CreateFeatureclass(
+        out_path=str(output_gdb),
+        out_name=feature_class_name,
+        geometry_type="POLYGON",
+        spatial_reference=spatial_reference,
+    )
+
+    field_definitions = [
+        ("file_name", "TEXT", 255),
+        ("image_path", "TEXT", 1000),
+        ("sp_status", "TEXT", 80),
+        ("raster_sr", "TEXT", 120),
+        ("raster_epsg", "LONG", None),
+        ("target_sr", "TEXT", 120),
+        ("target_epsg", "LONG", None),
+        ("raster_cx", "DOUBLE", None),
+        ("raster_cy", "DOUBLE", None),
+        ("target_cx", "DOUBLE", None),
+        ("target_cy", "DOUBLE", None),
+        ("projected", "SHORT", None),
+    ]
+    for field_name, field_type, field_length in field_definitions:
+        if field_length:
+            arcpy.management.AddField(output_fc, field_name, field_type, field_length=field_length)
+        else:
+            arcpy.management.AddField(output_fc, field_name, field_type)
+
+    insert_fields = ["SHAPE@"] + [field[0] for field in field_definitions]
+
+    def as_float(value):
+        if value is None or pd.isna(value) or value == "":
+            return None
+        return float(value)
+
+    def as_int(value):
+        if value is None or pd.isna(value) or value == "":
+            return None
+        return int(float(value))
+
+    with arcpy.da.InsertCursor(output_fc, insert_fields) as cursor:
+        for _, row in no_match_df.iterrows():
+            xmin = as_float(row.get("target_xmin"))
+            ymin = as_float(row.get("target_ymin"))
+            xmax = as_float(row.get("target_xmax"))
+            ymax = as_float(row.get("target_ymax"))
+            if None in (xmin, ymin, xmax, ymax):
+                continue
+
+            polygon = arcpy.Polygon(
+                arcpy.Array(
+                    [
+                        arcpy.Point(xmin, ymin),
+                        arcpy.Point(xmin, ymax),
+                        arcpy.Point(xmax, ymax),
+                        arcpy.Point(xmax, ymin),
+                        arcpy.Point(xmin, ymin),
+                    ]
+                ),
+                spatial_reference,
+            )
+            cursor.insertRow(
+                [
+                    polygon,
+                    row.get("file_name"),
+                    row.get("path"),
+                    row.get("spatial_status"),
+                    row.get("raster_sr_name"),
+                    as_int(row.get("raster_sr_factory_code")),
+                    row.get("target_sr_name"),
+                    as_int(row.get("target_sr_factory_code")),
+                    as_float(row.get("raster_center_x")),
+                    as_float(row.get("raster_center_y")),
+                    as_float(row.get("target_center_x")),
+                    as_float(row.get("target_center_y")),
+                    1 if str(row.get("projected_to_target")).lower() == "true" else 0,
+                ]
+            )
+
+    return output_fc
+
+
 def add_expected_names_with_spatial_sector(
     ortho_images_df: pd.DataFrame,
     spatial_sector_df: pd.DataFrame,
