@@ -314,12 +314,34 @@
         <li>Si una imagen no cruza ningun sector con la query principal, se intenta una segunda pasada solo para esas imagenes con la query invertida: <code>Sensor = 'DJI MATRICE 350 RTK'</code>.</li>
         <li>Si una imagen cruza dos o mas sectores, se usa el sector con mayor porcentaje de interseccion.</li>
         <li>El texto del sector se preserva tal como viene desde el feature class; solamente se reemplazan espacios por guion bajo.</li>
+        <li>Si una imagen no cruza ningun sector, puede resolverse mediante una excepcion espacial manual por nombre de archivo cuando el cliente o la revision SIG define el sector correcto.</li>
         <li>Si la imagen no cruza ningun sector, el registro queda para revision.</li>
       </ul>
       <div class="note">
         La columna <code>spatial_query_source</code> permite auditar si el sector salio de la query principal
-        (<code>query_principal</code>) o del intento contra el sensor excluido (<code>query_fallback_invertida</code>).
+        (<code>query_principal</code>), del intento contra el sensor excluido
+        (<code>query_fallback_invertida</code>) o de una excepcion espacial manual
+        (<code>excepcion_espacial_manual</code>).
       </div>
+
+      <h3>Excepciones espaciales manuales</h3>
+      <p>
+        Las excepciones espaciales manuales se usan solo para imagenes sin cruce geografico automatico, cuando ya existe
+        una decision funcional sobre el sector que deben usar. En estos casos el flujo asigna el sector indicado,
+        construye el nombre final con la fecha disponible y deja auditado el origen de la asignacion.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Imagen</th>
+            <th>Sector asignado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>GEOSP-TRN-002517_1001-03-T-CS-202-5600-C-DW-11486[000].tif</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+          <tr><td><code>GEOSP-TRN-002580_GS_Ortofoto Deposito Patio Pulmon.tif</code></td><td><code>Chacay_El_Mauro_Drone</code></td></tr>
+        </tbody>
+      </table>
 
       <h3>Nombre final</h3>
       <p>El nombre final se construye con esta estructura:</p>
