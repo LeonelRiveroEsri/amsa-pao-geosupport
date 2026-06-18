@@ -1,5 +1,5 @@
 ﻿metric,value
-run_timestamp,20260618_122718
+run_timestamp,20260618_123110
 audit_logic_version,2026-06-15-spatial-sector-preserve-token
 input_folder,\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT\20260206_Geosupport_primera entrega
 sector_feature_class,\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_06_COMPLEMENTOS\CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO
