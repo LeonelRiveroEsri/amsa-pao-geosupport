@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeoSupport - Checklist de flujo recomendado</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #5d6978;
+      --line: #d9e0ea;
+      --blue: #2457a6;
+      --green: #147449;
+      --amber: #986300;
+      --bg: #f6f8fb;
+      --paper: #fff;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    header {
+      background: #10233f;
+      color: #fff;
+      padding: 30px 38px;
+      border-bottom: 5px solid #2f7dd3;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 650;
+    }
+
+    header p {
+      margin: 0;
+      color: #dbeafe;
+      max-width: 900px;
+    }
+
+    main {
+      max-width: 1050px;
+      margin: 26px auto 44px;
+      padding: 0 22px;
+    }
+
+    section {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      margin: 16px 0;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 21px;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: #1a3760;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 14px;
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .step:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .num {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    p {
+      margin: 6px 0 10px;
+      color: var(--muted);
+    }
+
+    ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 5px 0;
+    }
+
+    code {
+      background: #eef2f7;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #172033;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.93em;
+    }
+
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 650;
+      margin-right: 6px;
+    }
+
+    .ok { background: #dcfce7; color: #14532d; }
+    .warn { background: #fef3c7; color: #78350f; }
+    .info { background: #dbeafe; color: #1e3a8a; }
+
+    .note {
+      border-left: 4px solid var(--amber);
+      background: #fff7e6;
+      padding: 12px 14px;
+      border-radius: 6px;
+      margin-top: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef3fb;
+    }
+
+    footer {
+      max-width: 1050px;
+      margin: 0 auto 36px;
+      padding: 0 22px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Checklist recomendado del flujo GeoSupport PAO</h1>
+    <p>
+      Secuencia operativa recomendada para preparar, cargar, validar y publicar imagenes drone
+      en el mosaic dataset y APRX PAO.
+    </p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Pasos recomendados</h2>
+
+      <div class="step">
+        <div class="num">1</div>
+        <div>
+          <h3>Confirmar carpeta de entrada y feature de sectores</h3>
+          <p>Verificar que la carpeta de vuelos nuevos y el feature class de indice/footprints esten correctos.</p>
+          <ul>
+            <li>Entrada: <code>PATH_INPUT_VUELOS_DRONE</code>.</li>
+            <li>Feature: <code>CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO</code>.</li>
+            <li>Campo de sector/llave: <code>Sector</code> y <code>Name</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">2</div>
+        <div>
+          <h3>Ejecutar preparacion de salida</h3>
+          <p>Correr <code>008 Preparacion Salida Carga Mosaico.ipynb</code>.</p>
+          <ul>
+            <li>Genera nombres oficiales por fecha y sector.</li>
+            <li>Calcula <code>Path_Destino</code>.</li>
+            <li>Prepara <code>04_ready_for_datastore.csv</code> y <code>06_attribute_updates.csv</code>.</li>
+            <li>Revisar <code>05_review_required.csv</code> antes de avanzar.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">3</div>
+        <div>
+          <h3>Validar el manifiesto</h3>
+          <p>Confirmar cantidades y rutas destino antes de tocar datastore o mosaico.</p>
+          <ul>
+            <li>Validar que <code>Path_Destino</code> sea correcto.</li>
+            <li>Confirmar que no falten sectores ni fechas.</li>
+            <li>Confirmar que la URL generada tenga la estructura del ImageServer.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">4</div>
+        <div>
+          <h3>Cargar al datastore y mosaic dataset</h3>
+          <p>Correr <code>009 Carga Datastore y Mosaico.ipynb</code>.</p>
+          <ul>
+            <li>Primero usar <code>DRY_RUN = True</code> si se cambio la logica.</li>
+            <li>Para carga real usar <code>DRY_RUN = False</code>.</li>
+            <li>El proceso copia al datastore, agrega al mosaico, construye footprints y actualiza atributos.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">5</div>
+        <div>
+          <h3>Revisar resultados de carga</h3>
+          <p>Validar el directorio <code>outputs/carga_mosaico/&lt;timestamp&gt;</code>.</p>
+          <ul>
+            <li><code>00_summary.csv</code>: resumen de estados.</li>
+            <li><code>01_load_results.csv</code>: detalle por imagen.</li>
+            <li><code>02_errors.csv</code>: debe estar vacio o explicado.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">6</div>
+        <div>
+          <h3>Exportar o revisar footprints</h3>
+          <p>Exportar/actualizar geometrias de footprint en GDB cuando se requiera control manual.</p>
+          <ul>
+            <li>Usar <code>Name</code> como llave entre mosaic dataset, CSV y feature class.</li>
+            <li>Reordenar/corregir geometria en GDB si corresponde.</li>
+            <li>Evitar duplicados para las imagenes que se normalizaran.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">7</div>
+        <div>
+          <h3>Auditar colormap y RGB</h3>
+          <p>Ejecutar la auditoria de TIFF restaurados/cargados.</p>
+          <ul>
+            <li>Detectar rasters con <code>has_colormap</code>.</li>
+            <li>Detectar rasters que no sean RGB probable.</li>
+            <li>Guardar <code>00_audit_colormap_rasters.csv</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">8</div>
+        <div>
+          <h3>Normalizar solo los TIFF necesarios</h3>
+          <p>Usar rasterio con el CSV de auditoria y el feature de footprints.</p>
+          <ul>
+            <li>Primero: <code>TEST_ONLY_FIRST_IMAGE = True</code>.</li>
+            <li>Validar visualmente el TIFF directo en ArcGIS Pro.</li>
+            <li>Luego procesar todos con <code>TEST_ONLY_FIRST_IMAGE = False</code>.</li>
+            <li>Si se reemplaza en datastore: <code>REPLACE_RASTER_WITH_RGB_CLEAN = True</code>.</li>
+            <li>Si no se quiere backup en datastore: <code>CREATE_BACKUP_BEFORE_RGB_REPLACE = False</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">9</div>
+        <div>
+          <h3>Actualizar APRX</h3>
+          <p>Correr <code>010 Actualizar APRX Imagenes Drone.ipynb</code>.</p>
+          <ul>
+            <li>Agrega imagenes al grupo <code>Vuelos Drone PAO &gt; Imagenes Drone</code>.</li>
+            <li>Renombra a formato corto <code>YY_MM_DD_Sector</code>.</li>
+            <li>Ordena de mas nuevas a mas viejas.</li>
+            <li>Guardar primero copia de revision con <code>SAVE_COPY_FOR_REVIEW = True</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">10</div>
+        <div>
+          <h3>Validacion final</h3>
+          <p>Revisar mosaico, APRX y rutas fisicas antes de publicar.</p>
+          <ul>
+            <li>Verificar que el mosaic dataset muestre las imagenes correctas.</li>
+            <li>Verificar que el TIFF directo se vea como RGB normal si fue normalizado.</li>
+            <li>Confirmar atributos: <code>Sector</code>, <code>Fecha_Adqui</code>, <code>URL</code>, <code>Proyecto</code>, <code>Sensor</code>.</li>
+            <li>Confirmar orden visual en APRX.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Reglas practicas</h2>
+      <table>
+        <thead>
+          <tr><th>Situacion</th><th>Accion recomendada</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Una imagen se ve bien en mosaico pero mal como TIFF directo</td>
+            <td>Auditar colormap y normalizar a RGB limpio usando rasterio + footprint.</td>
+          </tr>
+          <tr>
+            <td>Se requiere volver al TIFF original</td>
+            <td>Copiar desde <code>path</code> hacia <code>Path_Destino</code> y eliminar sidecars/caches.</td>
+          </tr>
+          <tr>
+            <td>El APRX queda con capas fuera de grupo</td>
+            <td>Usar solo el notebook <code>010</code>, con grupo padre y destino explicitos.</td>
+          </tr>
+          <tr>
+            <td>Footprint no se encuentra</td>
+            <td>Revisar que el <code>Name</code> exista una sola vez en el feature class de footprints.</td>
+          </tr>
+          <tr>
+            <td>No se quiere duplicar almacenamiento</td>
+            <td>Desactivar backups antes de reemplazar: <code>CREATE_BACKUP_BEFORE_RGB_REPLACE = False</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Orden recomendado de notebooks</h2>
+      <p>
+        <span class="tag info">1</span><code>008 Preparacion Salida Carga Mosaico.ipynb</code>
+      </p>
+      <p>
+        <span class="tag info">2</span><code>009 Carga Datastore y Mosaico.ipynb</code>
+      </p>
+      <p>
+        <span class="tag info">3</span><code>010 Actualizar APRX Imagenes Drone.ipynb</code>
+      </p>
+      <div class="note">
+        Mantener la normalizacion RGB como paso posterior a la carga y auditoria. No normalizar todas las
+        imagenes por defecto; hacerlo solo sobre las detectadas con colormap o lectura no RGB.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Checklist operativo GeoSupport PAO. Fecha de referencia: 2026-06-17.
+  </footer>
+</body>
+</html>

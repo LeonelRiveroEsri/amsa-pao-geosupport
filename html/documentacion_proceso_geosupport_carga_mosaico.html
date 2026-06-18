@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeoSupport - Proceso de carga de imagenes PAO al Mosaic Dataset</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #5f6b7a;
+      --line: #d8dee8;
+      --blue: #2457a6;
+      --green: #16704a;
+      --amber: #9a6500;
+      --red: #b42318;
+      --code: #0f172a;
+      --soft-blue: #eaf1ff;
+      --soft-green: #e9f7ef;
+      --soft-amber: #fff4dc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    header {
+      background: #10233f;
+      color: #fff;
+      padding: 34px 42px 30px;
+      border-bottom: 5px solid #2f7dd3;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 0;
+      color: #d8e6fa;
+      max-width: 980px;
+      font-size: 15px;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 26px auto 48px;
+      padding: 0 22px;
+    }
+
+    section {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin: 18px 0;
+      padding: 24px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      color: #12213a;
+    }
+
+    h3 {
+      margin: 22px 0 10px;
+      font-size: 17px;
+      color: #1a3760;
+    }
+
+    p { margin: 8px 0 12px; }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcfe;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 24px;
+      color: var(--blue);
+      margin-bottom: 2px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0 4px;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 118px;
+      background: #fbfcff;
+    }
+
+    .step .n {
+      display: inline-block;
+      min-width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      text-align: center;
+      line-height: 26px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step h3 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      color: var(--ink);
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #eef3fb;
+      color: #18345a;
+      font-weight: 650;
+    }
+
+    td code, li code, p code {
+      background: #eef2f7;
+      color: #16223a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.92em;
+    }
+
+    pre {
+      background: var(--code);
+      color: #dbeafe;
+      padding: 14px;
+      border-radius: 8px;
+      overflow: auto;
+      font-size: 13px;
+    }
+
+    ul {
+      margin-top: 8px;
+      padding-left: 22px;
+    }
+
+    li { margin: 6px 0; }
+
+    .note {
+      border-left: 4px solid var(--blue);
+      background: var(--soft-blue);
+      padding: 12px 14px;
+      border-radius: 6px;
+      margin: 12px 0;
+    }
+
+    .ok {
+      border-left-color: var(--green);
+      background: var(--soft-green);
+    }
+
+    .warn {
+      border-left-color: var(--amber);
+      background: var(--soft-amber);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 650;
+      background: #eef2f7;
+      color: #334155;
+      margin-right: 6px;
+    }
+
+    .tag.ok { background: #dcfce7; color: #14532d; border-left: 0; }
+    .tag.warn { background: #fef3c7; color: #78350f; border-left: 0; }
+    .tag.info { background: #dbeafe; color: #1e3a8a; border-left: 0; }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer {
+      max-width: 1180px;
+      margin: 0 auto 40px;
+      padding: 0 22px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow { grid-template-columns: 1fr; }
+      header { padding: 26px 22px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>GeoSupport - Proceso de carga de imagenes PAO al Mosaic Dataset</h1>
+    <p>
+      Documento de referencia del flujo construido para preparar imagenes de vuelos drone,
+      copiarlas al datastore, cargarlas al mosaic dataset, construir footprints, actualizar atributos,
+      normalizar rasters RGB y actualizar el APRX de publicacion.
+    </p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Resumen ejecutivo</h2>
+      <p>
+        El proceso automatiza la incorporacion de ortofotos drone al ecosistema SIG PAO. La logica
+        toma una carpeta de entrada, determina el nombre oficial por fecha y sector, copia cada
+        imagen al datastore, la registra en el mosaic dataset, construye el footprint, actualiza
+        campos operativos y deja el APRX ordenado para publicacion.
+      </p>
+
+      <div class="meta">
+        <div class="metric"><strong>1.392</strong><span>archivos revisados en entrada</span></div>
+        <div class="metric"><strong>33</strong><span>ortofotos detectadas</span></div>
+        <div class="metric"><strong>32</strong><span>imagenes listas para datastore</span></div>
+        <div class="metric"><strong>32</strong><span>imagenes cargadas al mosaico</span></div>
+      </div>
+
+      <div class="note ok">
+        Corrida de preparacion usada: <code>outputs/preparacion_carga_mosaico/20260615_155625</code>.
+        Corrida de carga real usada: <code>outputs/carga_mosaico/20260615_162625</code>.
+      </div>
+    </section>
+
+    <section>
+      <h2>Flujo de extremo a extremo</h2>
+      <div class="flow">
+        <div class="step">
+          <span class="n">1</span>
+          <h3>Preparacion</h3>
+          <p>Escaneo de carpeta de vuelos, lectura de fecha en nombre y cruce espacial contra indice de sectores.</p>
+        </div>
+        <div class="step">
+          <span class="n">2</span>
+          <h3>Datastore</h3>
+          <p>Construccion de ruta destino mensual y copia de TIFF desde input hacia datastore.</p>
+        </div>
+        <div class="step">
+          <span class="n">3</span>
+          <h3>Mosaic Dataset</h3>
+          <p>Alta con <code>AddRastersToMosaicDataset</code>, construccion de footprints y actualizacion de atributos.</p>
+        </div>
+        <div class="step">
+          <span class="n">4</span>
+          <h3>Normalizacion</h3>
+          <p>Auditoria de colormap y conversion/corte RGB limpio cuando el TIFF no queda compatible directo.</p>
+        </div>
+        <div class="step">
+          <span class="n">5</span>
+          <h3>APRX</h3>
+          <p>Insercion en <code>Vuelos Drone PAO &gt; Imagenes Drone</code>, renombrado corto y orden fecha descendente.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Entradas principales</h2>
+      <table>
+        <thead>
+          <tr><th>Entrada</th><th>Ruta / valor</th><th>Uso</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Carpeta de entrada</td>
+            <td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Vuelos_Drone_Sin_Procesar\INPUT\20260519_Geosupport</code></td>
+            <td>Origen de imagenes nuevas entregadas para carga.</td>
+          </tr>
+          <tr>
+            <td>Datastore raiz</td>
+            <td><code>\\amssclgis10.ams.gmams.cl\CL_MLP_PAO</code></td>
+            <td>Destino fisico de TIFF por zona/carpeta mensual.</td>
+          </tr>
+          <tr>
+            <td>Feature class de sectores/footprints</td>
+            <td><code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_06_COMPLEMENTOS\CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO</code></td>
+            <td>Geometrias de referencia para sector, footprint y normalizacion RGB.</td>
+          </tr>
+          <tr>
+            <td>Mosaic dataset</td>
+            <td><code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\01_Proyectos_ArcGIS\APRX\CL MLP PAO Aereo Image Server_v2\SQLServer-amssclgis06_ArcGIS-Aereo.sde\OWD.CL_MLP_PAO_IF_Ortho_Geosupport</code></td>
+            <td>Repositorio SIG donde se cargan los rasters y sus atributos.</td>
+          </tr>
+          <tr>
+            <td>APRX de publicacion</td>
+            <td><code>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\01_Proyectos_ArcGIS\APRX\VISOR TERRITORIAL SIG PAO v7.aprx</code></td>
+            <td>Proyecto que contiene grupo de capas para visualizacion/publicacion.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Preparacion de imagenes</h2>
+      <p>
+        La preparacion se consolido en <code>008 Preparacion Salida Carga Mosaico.ipynb</code>.
+        El objetivo es producir los CSV que luego alimentan la carga.
+      </p>
+
+      <h3>Logica aplicada</h3>
+      <ul>
+        <li>Busqueda recursiva de archivos en la carpeta de entrada.</li>
+        <li>Extraccion de fecha desde el nombre de archivo.</li>
+        <li>Cruce espacial con el feature class de indice de vuelos para determinar el <code>Sector</code>.</li>
+        <li>Si una imagen cruza mas de un sector, se usa el sector con mayor porcentaje de interseccion.</li>
+        <li>El nombre del sector se preserva como viene en la geometria; solo se normalizan espacios cuando aplica.</li>
+        <li>Resolucion de duplicados agregando sufijos secuenciales cuando se repite un nombre esperado.</li>
+      </ul>
+
+      <h3>Resultados de la corrida</h3>
+      <table>
+        <thead>
+          <tr><th>Metrica</th><th>Valor</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Archivos revisados</td><td>1.392</td></tr>
+          <tr><td>Ortofotos detectadas</td><td>33</td></tr>
+          <tr><td>Listas para datastore</td><td>32</td></tr>
+          <tr><td>Requieren revision</td><td>1</td></tr>
+          <tr><td>Duplicados resueltos</td><td>10</td></tr>
+          <tr><td>Actualizaciones de atributos generadas</td><td>32</td></tr>
+        </tbody>
+      </table>
+
+      <h3>CSV generados</h3>
+      <table>
+        <thead>
+          <tr><th>Archivo</th><th>Contenido</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>04_ready_for_datastore.csv</code></td><td>Imagenes listas para copiar al datastore y cargar al mosaico.</td></tr>
+          <tr><td><code>05_review_required.csv</code></td><td>Casos que no cumplen la logica o requieren revision manual.</td></tr>
+          <tr><td><code>06_attribute_updates.csv</code></td><td>Atributos a actualizar en el mosaic dataset.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Carga al datastore y mosaic dataset</h2>
+      <p>
+        La carga se ejecuto en <code>009 Carga Datastore y Mosaico.ipynb</code> usando el modulo
+        <code>core/mosaic_loader.py</code>. La corrida real fue <code>20260615_162625</code>.
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Operacion</th><th>Resultado</th><th>Detalle</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Copia al datastore</td><td><span class="tag ok">32 copiadas</span></td><td>Desde <code>path</code> hacia <code>destination_path</code>/<code>Path_Destino</code>.</td></tr>
+          <tr><td>Alta en mosaic dataset</td><td><span class="tag ok">32 agregadas</span></td><td>Con <code>AddRastersToMosaicDataset</code>, tipo <code>Raster Dataset</code>.</td></tr>
+          <tr><td>Build footprints</td><td><span class="tag ok">32 construidos</span></td><td>Metodo <code>RADIOMETRY</code>, con actualizacion de boundary.</td></tr>
+          <tr><td>Actualizacion atributos</td><td><span class="tag ok">32 actualizadas</span></td><td>Campos de proyecto, sensor, fechas, URL, sector y parametros fijos.</td></tr>
+          <tr><td>Estado final</td><td><span class="tag ok">32 OK</span></td><td>Sin errores registrados en <code>02_errors.csv</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Parametros principales de carga</h3>
+      <pre>MAXPS_VALUE = 10000
+LOWPS_VALUE = 0.15
+raster_type = "Raster Dataset"
+duplicate_items_action = "ALLOW_DUPLICATES"
+build_pyramids = "BUILD_PYRAMIDS"
+calculate_statistics = "CALCULATE_STATISTICS"</pre>
+
+      <h3>Parametros principales de footprints</h3>
+      <pre>FP_METHOD = "RADIOMETRY"
+FP_MIN_REGION_SIZE = 15
+FP_MAX_REGION_SIZE = 245
+FP_SMOOTHING = 10000
+FP_SIMPLIFY = 5
+FP_UPDATE_BOUNDARY = "UPDATE_BOUNDARY"
+FP_SHRINK_DISTANCE = 20
+FP_SIMPLIFY_TOL = 0.05</pre>
+    </section>
+
+    <section>
+      <h2>Mapeo de campos y atributos</h2>
+      <p>
+        El archivo <code>06_attribute_updates.csv</code> es el contrato de datos entre la preparacion
+        y la actualizacion del mosaic dataset.
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Campo destino</th><th>Origen / regla</th><th>Ejemplo</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Name</code></td><td>Nombre oficial del raster sin extension.</td><td><code>CL_MLP_PAO_IF_Ortho_26_05_01_Estacion_Cabecera</code></td></tr>
+          <tr><td><code>Path_Destino</code></td><td>Ruta final en datastore.</td><td><code>\\...\Chacay_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_01_Estacion_Cabecera.tif</code></td></tr>
+          <tr><td><code>Sector</code></td><td>Campo <code>Sector</code> del cruce espacial.</td><td><code>Estacion_Cabecera</code></td></tr>
+          <tr><td><code>Fecha_Adqui</code></td><td>Fecha derivada del token del nombre.</td><td><code>2026-05-01</code></td></tr>
+          <tr><td><code>Proyecto</code></td><td>Valor fijo.</td><td><code>PAO</code></td></tr>
+          <tr><td><code>Sensor</code></td><td>Valor fijo definido para la carga.</td><td><code>DJI Mavic Enterprise</code></td></tr>
+          <tr><td><code>Fecha_Publ</code></td><td>Fecha de ejecucion/preparacion.</td><td><code>2026-06-15</code></td></tr>
+          <tr><td><code>URL</code></td><td>Ruta ImageServer construida con path relativo del datastore.</td><td><code>.../ImageServer/file?id=.\Chacay_Drone\26_05\...&amp;rasterId=</code></td></tr>
+          <tr><td><code>MaxPS</code></td><td>Valor fijo aplicado en carga.</td><td><code>10000</code></td></tr>
+          <tr><td><code>LowPS</code></td><td>Valor fijo aplicado en carga.</td><td><code>0.15</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        En el codigo se contemplan variantes de campos de fecha segun existan en el mosaic dataset:
+        <code>FechaAdqui</code>/<code>Fecha_Adqui</code> y <code>FechaCarga</code>/<code>Fecha_Publ</code>.
+      </div>
+    </section>
+
+    <section>
+      <h2>Exportacion y gestion de geometria de footprints</h2>
+      <p>
+        Una vez cargadas las imagenes y construidos los footprints, se trabajo con una salida de geometria
+        hacia GDB para revisar, ordenar y normalizar los poligonos usados por el proceso.
+      </p>
+
+      <h3>Objetivo</h3>
+      <ul>
+        <li>Disponer de un feature class con todas las geometrias de footprint.</li>
+        <li>Usar el campo <code>Name</code> como llave entre raster, mosaic dataset y geometria.</li>
+        <li>Permitir reordenamientos y correcciones de geometria sin alterar la logica de carga.</li>
+        <li>Servir como fuente de corte para normalizaciones RGB cuando un TIFF queda con colormap o interpretacion no compatible.</li>
+      </ul>
+
+      <h3>Fuente consolidada</h3>
+      <pre>\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_06_COMPLEMENTOS\CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO</pre>
+
+      <div class="note warn">
+        Se detectaron nombres duplicados en algunas geometrias historicas. El proceso no corta si para el
+        <code>Name</code> objetivo no existe exactamente una geometria. Esto evita aplicar un footprint equivocado.
+      </div>
+    </section>
+
+    <section>
+      <h2>Normalizacion RGB y control de colormap</h2>
+      <p>
+        Durante las pruebas se observo que algunos TIFF podian verse bien dentro del mosaic dataset pero mal al
+        abrirse como raster directo. Esto se asocio a colormap, banda unica paleteada, banda alfa o metadatos TIFF
+        interpretados de forma distinta por ArcGIS Pro.
+      </p>
+
+      <h3>Auditoria</h3>
+      <ul>
+        <li>Se genero una auditoria con <code>arcpy.Describe</code> para revisar <code>bandCount</code>, <code>pixelType</code>, compresion y colormap.</li>
+        <li>Los resultados se guardan en <code>00_audit_colormap_rasters.csv</code>.</li>
+        <li>La lista resultante alimenta el reproceso RGB solo para rasters afectados o no RGB.</li>
+      </ul>
+
+      <h3>Normalizacion aplicada</h3>
+      <ul>
+        <li>Se usa <code>rasterio.mask</code> para cortar con el footprint.</li>
+        <li>Si el raster tiene tres o mas bandas, se escriben bandas 1, 2 y 3 como RGB.</li>
+        <li>Si el raster tiene una banda con colormap, se expande a tres bandas RGB <code>uint8</code>.</li>
+        <li>La salida se escribe como GeoTIFF RGB limpio con <code>photometric="RGB"</code>, <code>interleave="pixel"</code> y <code>compress="LZW"</code>.</li>
+        <li>Se puede reemplazar el TIFF del datastore sin backup cuando se requiera evitar duplicados, o conservar backup si se desea trazabilidad.</li>
+      </ul>
+
+      <pre>REPLACE_RASTER_WITH_RGB_CLEAN = True
+CREATE_BACKUP_BEFORE_RGB_REPLACE = False
+PROCESS_ONLY_COLORMAP_OR_NOT_RGB = True</pre>
+    </section>
+
+    <section>
+      <h2>Actualizacion del APRX</h2>
+      <p>
+        El flujo final del APRX se separo en <code>010 Actualizar APRX Imagenes Drone.ipynb</code>
+        para evitar mezclar la carga del mosaico con la organizacion visual del proyecto.
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Configuracion</th><th>Valor</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>APRX</td><td><code>VISOR TERRITORIAL SIG PAO v7.aprx</code></td></tr>
+          <tr><td>Mapa</td><td><code>CL MLP PAO 27 Imagenes Aereas PAO Image Server</code></td></tr>
+          <tr><td>Grupo padre</td><td><code>Vuelos Drone PAO</code></td></tr>
+          <tr><td>Grupo destino</td><td><code>Imagenes Drone</code></td></tr>
+          <tr><td>Nombre visible</td><td><code>YY_MM_DD_Sector</code>, sin prefijo y sin <code>.tif</code></td></tr>
+          <tr><td>Orden</td><td>Fecha descendente: imagenes mas nuevas primero.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Resultado observado</h3>
+      <p>
+        El notebook registro <span class="tag ok">32 capas agregadas</span>,
+        <span class="tag info">10 renombradas</span>, <span class="tag ok">0 errores</span> y un total de
+        <span class="tag info">500 capas</span> dentro del grupo destino en la copia de revision.
+      </p>
+    </section>
+
+    <section>
+      <h2>Artefactos operativos</h2>
+      <table>
+        <thead>
+          <tr><th>Artefacto</th><th>Descripcion</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>008 Preparacion Salida Carga Mosaico.ipynb</code></td><td>Genera nombres, rutas destino, atributos, URL y CSV de carga.</td></tr>
+          <tr><td><code>009 Carga Datastore y Mosaico.ipynb</code></td><td>Copia, carga al mosaico, build footprints, updates, restauraciones y normalizacion RGB.</td></tr>
+          <tr><td><code>010 Actualizar APRX Imagenes Drone.ipynb</code></td><td>Organiza visualmente el APRX y ordena las capas por fecha.</td></tr>
+          <tr><td><code>core/mosaic_loader.py</code></td><td>Funciones reutilizables de carga, footprints y actualizacion de atributos.</td></tr>
+          <tr><td><code>04_ready_for_datastore.csv</code></td><td>Manifiesto de imagenes listas para copiar/cargar.</td></tr>
+          <tr><td><code>06_attribute_updates.csv</code></td><td>Contrato de atributos para el mosaic dataset.</td></tr>
+          <tr><td><code>01_load_results.csv</code></td><td>Log de copia, alta, footprint y update por imagen.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Controles y recomendaciones</h2>
+      <ul>
+        <li>Validar siempre <code>05_review_required.csv</code> antes de ejecutar una carga real.</li>
+        <li>Ejecutar primero en modo prueba cuando se cambie la logica de normalizacion RGB.</li>
+        <li>No recortar nuevamente sobre un TIFF ya normalizado si se requiere restaurar el origen; copiar desde <code>path</code> hacia <code>Path_Destino</code>.</li>
+        <li>Eliminar sidecars del destino cuando se restaura un TIFF: <code>.aux.xml</code>, <code>.ovr</code>, <code>.msk</code>, <code>.rrd</code>.</li>
+        <li>Para publicar, trabajar primero con <code>saveACopy</code> del APRX y solo guardar el original cuando la jerarquia y orden sean correctos.</li>
+        <li>El <code>Name</code> debe ser la llave consistente entre CSV, mosaic dataset y feature class de footprints.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    Documento generado para el proyecto GeoSupport PAO. Fecha de referencia: 2026-06-17.
+  </footer>
+</body>
+</html>
