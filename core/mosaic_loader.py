@@ -10,6 +10,7 @@ import pandas as pd
 
 MAXPS_VALUE = 10000
 LOWPS_VALUE = 0.15
+MINPS_VALUE = 0
 
 FP_METHOD = "RADIOMETRY"
 FP_MIN_REGION_SIZE = 15
@@ -204,6 +205,7 @@ def update_mosaic_attributes(
     row: pd.Series,
     maxps_value: float = MAXPS_VALUE,
     lowps_value: float = LOWPS_VALUE,
+    minps_value: float = MINPS_VALUE,
     dry_run: bool = True,
 ) -> dict:
     name = row["Name"]
@@ -212,6 +214,7 @@ def update_mosaic_attributes(
     requested_values = {
         "MaxPS": float(maxps_value),
         "LowPS": float(lowps_value),
+        "MinPS": float(minps_value),
         "Sector": row.get("Sector"),
         "FechaAdqui": parse_date(row.get("Fecha_Adqui")),
         "Fecha_Adqui": parse_date(row.get("Fecha_Adqui")),
@@ -234,17 +237,31 @@ def update_mosaic_attributes(
         return result
 
     arcpy = _import_arcpy()
-    existing_fields = {field.name for field in arcpy.ListFields(mosaic_dataset)}
+    fields = arcpy.ListFields(mosaic_dataset)
+    existing_fields = {field.name for field in fields}
+    field_types = {field.name: field.type for field in fields}
+    product_name_field = next(
+        (field for field in ["ProductName", "ProductNam"] if field in existing_fields),
+        None,
+    )
+    if product_name_field:
+        requested_values[product_name_field] = None
+
     update_fields = [field for field in requested_values if field in existing_fields]
     missing_fields = [field for field in requested_values if field not in existing_fields]
     result["attribute_missing_fields"] = "|".join(missing_fields) if missing_fields else None
 
     try:
         updated = 0
-        with arcpy.da.UpdateCursor(mosaic_dataset, update_fields, where_clause=where) as cursor:
+        cursor_fields = ["OID@"] + update_fields
+        with arcpy.da.UpdateCursor(mosaic_dataset, cursor_fields, where_clause=where) as cursor:
             for cursor_row in cursor:
-                for index, field in enumerate(update_fields):
-                    cursor_row[index] = requested_values[field]
+                objectid = cursor_row[0]
+                for index, field in enumerate(update_fields, start=1):
+                    if field == product_name_field:
+                        cursor_row[index] = str(objectid) if field_types.get(field) == "String" else objectid
+                    else:
+                        cursor_row[index] = requested_values[field]
                 cursor.updateRow(cursor_row)
                 updated += 1
 
@@ -264,6 +281,7 @@ def process_mosaic_load_row(
     skip_existing_mosaic_name: bool = True,
     maxps_value: float = MAXPS_VALUE,
     lowps_value: float = LOWPS_VALUE,
+    minps_value: float = MINPS_VALUE,
     dry_run: bool = True,
 ) -> dict:
     name = row["Name"]
@@ -302,6 +320,7 @@ def process_mosaic_load_row(
             row,
             maxps_value=maxps_value,
             lowps_value=lowps_value,
+            minps_value=minps_value,
             dry_run=dry_run,
         )
     )
