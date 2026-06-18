@@ -533,6 +533,42 @@ def _extent_to_polygon(extent, spatial_reference):
     return arcpy.Polygon(points, spatial_reference)
 
 
+def _spatial_reference_info(spatial_reference) -> dict:
+    if not spatial_reference:
+        return {
+            "sr_name": None,
+            "sr_factory_code": None,
+            "sr_type": None,
+        }
+
+    return {
+        "sr_name": getattr(spatial_reference, "name", None),
+        "sr_factory_code": getattr(spatial_reference, "factoryCode", None),
+        "sr_type": getattr(spatial_reference, "type", None),
+    }
+
+
+def _extent_info(extent, prefix: str) -> dict:
+    if not extent:
+        return {
+            f"{prefix}_xmin": None,
+            f"{prefix}_ymin": None,
+            f"{prefix}_xmax": None,
+            f"{prefix}_ymax": None,
+            f"{prefix}_center_x": None,
+            f"{prefix}_center_y": None,
+        }
+
+    return {
+        f"{prefix}_xmin": extent.XMin,
+        f"{prefix}_ymin": extent.YMin,
+        f"{prefix}_xmax": extent.XMax,
+        f"{prefix}_ymax": extent.YMax,
+        f"{prefix}_center_x": (extent.XMin + extent.XMax) / 2,
+        f"{prefix}_center_y": (extent.YMin + extent.YMax) / 2,
+    }
+
+
 def load_sector_polygons(
     index_fc: str,
     sector_field: str = "Sector",
@@ -584,6 +620,25 @@ def calculate_spatial_sector_matches(
         "spatial_overlap_count",
         "spatial_all_matches",
         "spatial_error",
+        "raster_sr_name",
+        "raster_sr_factory_code",
+        "raster_sr_type",
+        "target_sr_name",
+        "target_sr_factory_code",
+        "target_sr_type",
+        "raster_xmin",
+        "raster_ymin",
+        "raster_xmax",
+        "raster_ymax",
+        "raster_center_x",
+        "raster_center_y",
+        "target_xmin",
+        "target_ymin",
+        "target_xmax",
+        "target_ymax",
+        "target_center_x",
+        "target_center_y",
+        "projected_to_target",
     ]
     sector_polygons, target_spatial_reference = load_sector_polygons(
         index_fc,
@@ -599,7 +654,11 @@ def calculate_spatial_sector_matches(
         try:
             raster_description = arcpy.Describe(file_path)
             raster_spatial_reference = raster_description.spatialReference
+            raster_sr_info = _spatial_reference_info(raster_spatial_reference)
+            target_sr_info = _spatial_reference_info(target_spatial_reference)
+            raster_extent_info = _extent_info(raster_description.extent, "raster")
             raster_geometry = _extent_to_polygon(raster_description.extent, raster_spatial_reference)
+            projected_to_target = False
 
             if (
                 raster_geometry.spatialReference
@@ -607,6 +666,20 @@ def calculate_spatial_sector_matches(
                 and raster_geometry.spatialReference.factoryCode != target_spatial_reference.factoryCode
             ):
                 raster_geometry = raster_geometry.projectAs(target_spatial_reference)
+                projected_to_target = True
+
+            target_extent_info = _extent_info(raster_geometry.extent, "target")
+            spatial_debug = {
+                "raster_sr_name": raster_sr_info["sr_name"],
+                "raster_sr_factory_code": raster_sr_info["sr_factory_code"],
+                "raster_sr_type": raster_sr_info["sr_type"],
+                "target_sr_name": target_sr_info["sr_name"],
+                "target_sr_factory_code": target_sr_info["sr_factory_code"],
+                "target_sr_type": target_sr_info["sr_type"],
+                "projected_to_target": projected_to_target,
+            }
+            spatial_debug.update(raster_extent_info)
+            spatial_debug.update(target_extent_info)
 
             raster_area = raster_geometry.area
             if not raster_area:
@@ -620,6 +693,7 @@ def calculate_spatial_sector_matches(
                         "spatial_overlap_area": 0,
                         "spatial_overlap_pct": 0,
                         "spatial_overlap_count": 0,
+                        **spatial_debug,
                     }
                 )
                 continue
@@ -654,6 +728,7 @@ def calculate_spatial_sector_matches(
                         "spatial_overlap_area": 0,
                         "spatial_overlap_pct": 0,
                         "spatial_overlap_count": 0,
+                        **spatial_debug,
                     }
                 )
                 continue
@@ -674,6 +749,7 @@ def calculate_spatial_sector_matches(
                         f"{match['sector_token']}:{match['overlap_pct']:.2f}"
                         for match in matches
                     ),
+                    **spatial_debug,
                 }
             )
         except Exception as error:
