@@ -22,6 +22,14 @@ def _import_pandas():
         import pandas as pd  # type: ignore
     except ImportError as exc:
         raise ImportError("pandas is required to return inspection tables.") from exc
+    except ValueError as exc:
+        if "numpy.dtype size changed" in str(exc):
+            raise RuntimeError(
+                "pandas could not load because pandas and numpy are binary-incompatible "
+                "in the active ArcGIS Pro Python environment. Reinstall matching pandas "
+                "and numpy packages in that environment before running this notebook."
+            ) from exc
+        raise
 
     return pd
 

@@ -1,0 +1,12 @@
+name: geosupport-rasterio
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy=1.26.*
+  - rasterio=1.3.*
+  - gdal=3.8.*
+  - proj
+  - libtiff
+  - zlib
+  - pip
