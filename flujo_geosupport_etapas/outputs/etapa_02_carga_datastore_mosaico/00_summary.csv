@@ -1,0 +1,18 @@
+﻿metric,value
+run_timestamp,20260619_085844
+ready_for_datastore_csv,c:\Users\esrlrivero_adm\Documents\Geosupport\amsa-pao-geosupport\flujo_geosupport_etapas\outputs\etapa_01_preparar_paths_datastore\04_ready_for_datastore.csv
+mosaic_dataset,\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\01_Proyectos_ArcGIS\APRX\CL MLP PAO Aereo Image Server_v2\SQLServer-amssclgis06_ArcGIS-Aereo.sde\OWD.CL_MLP_PAO_IF_Ortho_Geosupport
+dry_run,True
+overwrite_copy,False
+skip_existing_mosaic_name,True
+maxps_value,10000
+lowps_value,0.15
+minps_value,0
+product_name_value,OBJECTID del registro en el mosaic dataset
+rows_to_process,33
+copy_status_already_exists,32
+copy_status_dry_run,1
+mosaic_add_status_dry_run,33
+footprint_status_dry_run,33
+attribute_status_dry_run,33
+overall_status_dry_run,33

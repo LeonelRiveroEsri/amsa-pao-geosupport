@@ -1,0 +1,14 @@
+﻿metric,value
+run_timestamp,20260619_090620
+dry_run,False
+load_results_csv,c:\Users\esrlrivero_adm\Documents\Geosupport\amsa-pao-geosupport\flujo_geosupport_etapas\outputs\etapa_02_carga_datastore_mosaico\02_load_results.csv
+mosaic_dataset,\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\01_Proyectos_ArcGIS\APRX\CL MLP PAO Aereo Image Server_v2\SQLServer-amssclgis06_ArcGIS-Aereo.sde\OWD.CL_MLP_PAO_IF_Ortho_Geosupport
+fc_footprint_indice,\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_06_COMPLEMENTOS\CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO
+temp_gdb,c:\Users\esrlrivero_adm\Documents\Geosupport\amsa-pao-geosupport\Dataset\Datos.gdb
+stage_2_names_count,33
+existing_target_names_count,7
+names_to_append_count,26
+export_count,24
+append_count,24
+nombre_vuelo_calculated_count,505
+mosaic_nombre_vuelo_updated_count,31
