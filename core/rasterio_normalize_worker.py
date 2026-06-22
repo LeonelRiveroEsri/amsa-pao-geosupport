@@ -77,7 +77,10 @@ def normalize_with_rasterio(source_path: Union[str, Path], footprint_geojson: di
 
     source_path = Path(source_path)
     output_path = Path(output_path)
+    temp_output_path = output_path.with_name(f"{output_path.stem}.tmp{output_path.suffix}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    if temp_output_path.exists():
+        temp_output_path.unlink()
 
     with rasterio.open(source_path) as src:
         masked_data, out_transform = mask(src, [footprint_geojson], crop=True, filled=False)
@@ -121,7 +124,7 @@ def normalize_with_rasterio(source_path: Union[str, Path], footprint_geojson: di
         alpha = (~masked_data.mask.all(axis=0)).astype("uint8") * 255
         profile.update(count=4, dtype=rgb.dtype, nodata=None)
 
-        with rasterio.open(output_path, "w", **profile) as dst:
+        with rasterio.open(temp_output_path, "w", **profile) as dst:
             dst.write(rgb.astype(profile["dtype"], copy=False), indexes=[1, 2, 3])
             dst.write(alpha, 4)
             dst.colorinterp = (
@@ -131,6 +134,7 @@ def normalize_with_rasterio(source_path: Union[str, Path], footprint_geojson: di
                 rasterio.enums.ColorInterp.alpha,
             )
 
+    temp_output_path.replace(output_path)
     return output_path
 
 
