@@ -10,9 +10,13 @@ import argparse
 import csv
 import json
 import shutil
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
+
+
+csv.field_size_limit(sys.maxsize)
 
 
 def _read_manifest(path: Path) -> list[dict[str, str]]:
