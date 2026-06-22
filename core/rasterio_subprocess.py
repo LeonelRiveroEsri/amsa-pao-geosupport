@@ -327,7 +327,13 @@ def run_stage_04_rasterio_subprocess(
         print(completed.stderr)
 
     if completed.returncode != 0:
-        raise RuntimeError(f"El subproceso rasterio termino con codigo {completed.returncode}.")
+        raise RuntimeError(
+            "El subproceso rasterio termino con codigo {}.\nSTDOUT:\n{}\nSTDERR:\n{}".format(
+                completed.returncode,
+                completed.stdout,
+                completed.stderr,
+            )
+        )
 
     if build_pyramids_after_replace:
         build_pyramids_for_replaced_results(output_dir / "01_normalizacion_rasterio_resultados.csv")

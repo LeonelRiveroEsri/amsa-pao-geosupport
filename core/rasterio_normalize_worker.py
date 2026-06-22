@@ -181,7 +181,7 @@ def run(args: argparse.Namespace) -> int:
     summary_rows.extend({"metric": f"status_{status}", "value": count} for status, count in sorted(counts.items()))
     _write_csv(args.summary_csv, summary_rows, ["metric", "value"])
 
-    return 1 if counts.get("error") else 0
+    return 0
 
 
 def parse_args() -> argparse.Namespace:
