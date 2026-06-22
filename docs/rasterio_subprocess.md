@@ -4,13 +4,25 @@ El ambiente `arcgispro` debe quedarse para `arcpy`. Los procesos con `rasterio`
 se ejecutan en un subproceso separado para evitar conflictos binarios con GDAL,
 numpy y pandas.
 
-## Crear el ambiente
+## Ambiente rasterio
 
-Desde Anaconda Prompt o ArcGIS Pro Python Command Prompt:
+El flujo 04 usa este ambiente ya creado:
+
+```text
+C:\Users\esrlrivero_adm\AppData\Local\ESRI\conda\envs\geo-raster-py311
+```
+
+Validacion desde Anaconda Prompt o ArcGIS Pro Python Command Prompt:
+
+```powershell
+C:\Users\esrlrivero_adm\AppData\Local\ESRI\conda\envs\geo-raster-py311\python.exe -c "import rasterio, numpy; print(rasterio.__version__, numpy.__version__)"
+```
+
+Si se necesita recrear un ambiente alternativo:
 
 ```powershell
 conda env create -f environments\rasterio.yml
-conda activate geosupport-rasterio
+conda activate geo-raster-py311
 python -c "import rasterio, numpy; print(rasterio.__version__, numpy.__version__)"
 ```
 
@@ -49,7 +61,7 @@ completed = run_stage_04_rasterio_subprocess(
     footprints_feature_class=r"\\amssclgis08.ams.gmams.cl\CL_MLP_PAO\02_FGDB\CL_MLP_PAO_v1.gdb\CL_MLP_PAO_06_COMPLEMENTOS\CL_MLP_PAO_Indice_Vuelos_PAO_IMGS_PO",
     footprint_name_field="Name",
     output_dir=OUTPUT_DIR,
-    env_name="geosupport-rasterio",
+    env_path=r"C:\Users\esrlrivero_adm\AppData\Local\ESRI\conda\envs\geo-raster-py311",
     process_only_successful_loads=True,
     limit_rows=None,
     replace_originals=True,
@@ -64,7 +76,7 @@ El wrapper con `arcpy` genera un manifiesto CSV con paths y geometrias. Luego
 ejecuta:
 
 ```powershell
-conda run -n geosupport-rasterio python core\rasterio_normalize_worker.py ...
+conda run -p C:\Users\esrlrivero_adm\AppData\Local\ESRI\conda\envs\geo-raster-py311 python core\rasterio_normalize_worker.py ...
 ```
 
 El worker no importa `arcpy` ni `pandas`.

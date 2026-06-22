@@ -12,6 +12,9 @@ from pathlib import Path
 from typing import Iterable, Optional, Union
 
 
+DEFAULT_RASTERIO_ENV_PATH = r"C:\Users\esrlrivero_adm\AppData\Local\ESRI\conda\envs\geo-raster-py311"
+
+
 def _read_csv(path: Union[str, Path]) -> list[dict[str, str]]:
     path = Path(path)
     if not path.exists():
@@ -182,22 +185,49 @@ def _conda_executable() -> str:
     return conda
 
 
+def _direct_env_python_command(env_path: Union[str, Path]) -> tuple[list[str], dict[str, str]]:
+    env_path = Path(env_path)
+    python_exe = env_path / "python.exe"
+    if not python_exe.exists():
+        raise FileNotFoundError(f"No se encontro python.exe en el ambiente rasterio: {python_exe}")
+
+    env = os.environ.copy()
+    path_parts = [
+        str(env_path),
+        str(env_path / "Library" / "bin"),
+        str(env_path / "Scripts"),
+        env.get("PATH", ""),
+    ]
+    env["PATH"] = os.pathsep.join(part for part in path_parts if part)
+    return [str(python_exe)], env
+
+
 def run_rasterio_worker(
     manifest_csv: Union[str, Path],
     output_dir: Union[str, Path],
-    env_name: str = "geosupport-rasterio",
+    env_name: Optional[str] = None,
+    env_path: Optional[Union[str, Path]] = DEFAULT_RASTERIO_ENV_PATH,
     replace_originals: bool = False,
     create_backup_before_replace: bool = False,
     backup_suffix: str = ".bak_original_before_rasterio",
 ) -> subprocess.CompletedProcess:
     output_dir = Path(output_dir)
     worker_script = Path(__file__).with_name("rasterio_normalize_worker.py")
+    if env_path:
+        conda = shutil.which("conda") or os.environ.get("CONDA_EXE")
+        if conda:
+            runner = [conda, "run", "-p", str(env_path), "python"]
+            subprocess_env = None
+        else:
+            runner, subprocess_env = _direct_env_python_command(env_path)
+    elif env_name:
+        runner = [_conda_executable(), "run", "-n", env_name, "python"]
+        subprocess_env = None
+    else:
+        raise ValueError("Debe indicar env_path o env_name para ejecutar rasterio.")
+
     command = [
-        _conda_executable(),
-        "run",
-        "-n",
-        env_name,
-        "python",
+        *runner,
         str(worker_script),
         "--manifest",
         str(manifest_csv),
@@ -216,7 +246,7 @@ def run_rasterio_worker(
     if create_backup_before_replace:
         command.append("--create-backup-before-replace")
 
-    return subprocess.run(command, check=False, text=True, capture_output=True)
+    return subprocess.run(command, check=False, text=True, capture_output=True, env=subprocess_env)
 
 
 def build_pyramids_for_replaced_results(results_csv: Union[str, Path]) -> None:
@@ -233,7 +263,8 @@ def run_stage_04_rasterio_subprocess(
     footprints_feature_class: str,
     footprint_name_field: str,
     output_dir: Union[str, Path],
-    env_name: str = "geosupport-rasterio",
+    env_name: Optional[str] = None,
+    env_path: Optional[Union[str, Path]] = DEFAULT_RASTERIO_ENV_PATH,
     process_only_successful_loads: bool = True,
     limit_rows: Optional[int] = None,
     replace_originals: bool = False,
@@ -259,6 +290,7 @@ def run_stage_04_rasterio_subprocess(
         manifest_csv=manifest_csv,
         output_dir=output_dir,
         env_name=env_name,
+        env_path=env_path,
         replace_originals=replace_originals,
         create_backup_before_replace=create_backup_before_replace,
         backup_suffix=backup_suffix,

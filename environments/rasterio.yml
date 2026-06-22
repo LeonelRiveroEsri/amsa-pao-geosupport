@@ -1,4 +1,4 @@
-name: geosupport-rasterio
+name: geo-raster-py311
 channels:
   - conda-forge
 dependencies:
