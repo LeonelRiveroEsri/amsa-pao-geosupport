@@ -218,6 +218,11 @@ def _direct_env_python_command(env_path: Union[str, Path]) -> tuple[list[str], d
         raise FileNotFoundError(f"No se encontro python.exe en el ambiente rasterio: {python_exe}")
 
     env = os.environ.copy()
+    env["CONDA_PREFIX"] = str(env_path)
+    env["CONDA_DEFAULT_ENV"] = env_path.name
+    env.pop("PYTHONHOME", None)
+    env.pop("PYTHONPATH", None)
+
     gdal_data = env_path / "Library" / "share" / "gdal"
     proj_lib = env_path / "Library" / "share" / "proj"
     if gdal_data.exists():
@@ -227,9 +232,13 @@ def _direct_env_python_command(env_path: Union[str, Path]) -> tuple[list[str], d
 
     path_parts = [
         str(env_path),
+        str(env_path / "Library" / "mingw-w64" / "bin"),
+        str(env_path / "Library" / "usr" / "bin"),
         str(env_path / "Library" / "bin"),
         str(env_path / "Scripts"),
-        env.get("PATH", ""),
+        r"C:\Windows\System32",
+        r"C:\Windows",
+        r"C:\Windows\System32\Wbem",
     ]
     env["PATH"] = os.pathsep.join(part for part in path_parts if part)
     return [str(python_exe)], env

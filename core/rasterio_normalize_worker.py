@@ -17,6 +17,9 @@ from pathlib import Path
 from typing import Optional, Union
 
 
+_DLL_DIRECTORY_HANDLES = []
+
+
 def _configure_conda_dll_search_path() -> None:
     env_prefix = Path(sys.prefix)
     default_gdal_data = env_prefix / "Library" / "share" / "gdal"
@@ -35,7 +38,7 @@ def _configure_conda_dll_search_path() -> None:
 
     for dll_dir in dll_dirs:
         if dll_dir.exists() and hasattr(os, "add_dll_directory"):
-            os.add_dll_directory(str(dll_dir))
+            _DLL_DIRECTORY_HANDLES.append(os.add_dll_directory(str(dll_dir)))
 
 
 _configure_conda_dll_search_path()
