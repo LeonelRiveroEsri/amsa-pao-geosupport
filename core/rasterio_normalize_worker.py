@@ -88,8 +88,11 @@ def normalize_with_rasterio(source_path: Union[str, Path], footprint_geojson: di
             width=masked_data.shape[2],
             transform=out_transform,
             tiled=True,
+            blockxsize=256,
+            blockysize=256,
             compress="deflate",
             photometric="RGB",
+            BIGTIFF="IF_SAFER",
         )
 
         if src.count >= 3:
@@ -119,7 +122,7 @@ def normalize_with_rasterio(source_path: Union[str, Path], footprint_geojson: di
         profile.update(count=4, dtype=rgb.dtype, nodata=None)
 
         with rasterio.open(output_path, "w", **profile) as dst:
-            dst.write(rgb.astype(profile["dtype"], copy=False))
+            dst.write(rgb.astype(profile["dtype"], copy=False), indexes=[1, 2, 3])
             dst.write(alpha, 4)
             dst.colorinterp = (
                 rasterio.enums.ColorInterp.red,
