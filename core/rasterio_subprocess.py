@@ -61,7 +61,12 @@ def read_stage_2_rows(
             for row in rows:
                 overall_status = str(row.get("overall_status", "")).lower()
                 mosaic_status = str(row.get("mosaic_add_status", "")).lower()
-                if overall_status == "ok" or mosaic_status in {"added", "already_exists"}:
+                copy_status = str(row.get("copy_status", "")).lower()
+                if (
+                    overall_status == "ok"
+                    or mosaic_status in {"added", "already_exists"}
+                    or copy_status in {"copied", "already_exists"}
+                ):
                     filtered_rows.append(row)
             rows = filtered_rows
     elif attrs_rows:
