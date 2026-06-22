@@ -218,6 +218,13 @@ def _direct_env_python_command(env_path: Union[str, Path]) -> tuple[list[str], d
         raise FileNotFoundError(f"No se encontro python.exe en el ambiente rasterio: {python_exe}")
 
     env = os.environ.copy()
+    gdal_data = env_path / "Library" / "share" / "gdal"
+    proj_lib = env_path / "Library" / "share" / "proj"
+    if gdal_data.exists():
+        env["GDAL_DATA"] = str(gdal_data)
+    if proj_lib.exists():
+        env["PROJ_LIB"] = str(proj_lib)
+
     path_parts = [
         str(env_path),
         str(env_path / "Library" / "bin"),

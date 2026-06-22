@@ -19,6 +19,14 @@ from typing import Optional, Union
 
 def _configure_conda_dll_search_path() -> None:
     env_prefix = Path(sys.prefix)
+    default_gdal_data = env_prefix / "Library" / "share" / "gdal"
+    default_proj_lib = env_prefix / "Library" / "share" / "proj"
+
+    if default_gdal_data.exists():
+        os.environ.setdefault("GDAL_DATA", str(default_gdal_data))
+    if default_proj_lib.exists():
+        os.environ.setdefault("PROJ_LIB", str(default_proj_lib))
+
     dll_dirs = [
         env_prefix / "Library" / "bin",
         env_prefix / "DLLs",
