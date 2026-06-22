@@ -240,12 +240,7 @@ def run_rasterio_worker(
     output_dir = Path(output_dir)
     worker_script = Path(__file__).with_name("rasterio_normalize_worker.py")
     if env_path:
-        conda = shutil.which("conda") or os.environ.get("CONDA_EXE")
-        if conda:
-            runner = [conda, "run", "-p", str(env_path), "python"]
-            subprocess_env = None
-        else:
-            runner, subprocess_env = _direct_env_python_command(env_path)
+        runner, subprocess_env = _direct_env_python_command(env_path)
     elif env_name:
         runner = [_conda_executable(), "run", "-n", env_name, "python"]
         subprocess_env = None

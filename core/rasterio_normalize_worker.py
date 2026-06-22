@@ -11,9 +11,26 @@ import csv
 import json
 import shutil
 import sys
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
+
+
+def _configure_conda_dll_search_path() -> None:
+    env_prefix = Path(sys.prefix)
+    dll_dirs = [
+        env_prefix / "Library" / "bin",
+        env_prefix / "DLLs",
+        env_prefix,
+    ]
+
+    for dll_dir in dll_dirs:
+        if dll_dir.exists() and hasattr(os, "add_dll_directory"):
+            os.add_dll_directory(str(dll_dir))
+
+
+_configure_conda_dll_search_path()
 
 
 def _increase_csv_field_size_limit() -> None:
@@ -120,7 +137,12 @@ def replace_original(
     return backup_path if create_backup else None
 
 
+def validate_rasterio_runtime() -> None:
+    import rasterio  # noqa: F401
+
+
 def run(args: argparse.Namespace) -> int:
+    validate_rasterio_runtime()
     rows = _read_manifest(args.manifest)
     results = []
 
