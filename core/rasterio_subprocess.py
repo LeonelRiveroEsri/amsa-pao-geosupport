@@ -154,13 +154,22 @@ def build_rasterio_manifest(
     manifest_csv: Union[str, Path],
 ) -> Path:
     manifest_rows = []
+    missing_footprint_rows = []
 
     for row in rows:
         name = str(row["Name"])
         source_path = Path(row["destination_path"])
         footprint_geometry = footprints_index.get(name)
         if footprint_geometry is None:
-            raise ValueError(f"No existe footprint para Name={name}")
+            missing_footprint_rows.append(
+                {
+                    "Name": name,
+                    "source_path": str(source_path),
+                    "status": "missing_footprint",
+                    "error": f"No existe footprint para Name={name}",
+                }
+            )
+            continue
 
         target_sr = _raster_spatial_reference(source_path)
         manifest_rows.append(
@@ -175,6 +184,18 @@ def build_rasterio_manifest(
                 ),
             }
         )
+
+    if missing_footprint_rows:
+        missing_csv = Path(manifest_csv).with_name("00_missing_footprints_for_rasterio.csv")
+        _write_csv(
+            missing_csv,
+            missing_footprint_rows,
+            ["Name", "source_path", "status", "error"],
+        )
+        print(f"Footprints faltantes omitidos: {len(missing_footprint_rows)}. Revision: {missing_csv}")
+
+    if not manifest_rows:
+        raise ValueError("No hay imagenes con footprint disponible para normalizar.")
 
     return _write_csv(
         manifest_csv,
