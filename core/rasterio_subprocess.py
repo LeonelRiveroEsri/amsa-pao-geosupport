@@ -322,6 +322,9 @@ def run_stage_04_rasterio_subprocess(
         backup_suffix=backup_suffix,
     )
 
+    (output_dir / "rasterio_worker_stdout.log").write_text(completed.stdout or "", encoding="utf-8")
+    (output_dir / "rasterio_worker_stderr.log").write_text(completed.stderr or "", encoding="utf-8")
+
     print(completed.stdout)
     if completed.stderr:
         print(completed.stderr)

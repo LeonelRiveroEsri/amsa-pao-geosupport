@@ -16,7 +16,17 @@ from pathlib import Path
 from typing import Optional, Union
 
 
-csv.field_size_limit(sys.maxsize)
+def _increase_csv_field_size_limit() -> None:
+    max_int = sys.maxsize
+    while True:
+        try:
+            csv.field_size_limit(max_int)
+            return
+        except OverflowError:
+            max_int = int(max_int / 10)
+
+
+_increase_csv_field_size_limit()
 
 
 def _read_manifest(path: Path) -> list[dict[str, str]]:
