@@ -3,6 +3,8 @@ Dataset/*
 excel/~$*.xlsx
 # Ignorar todo dentro de data
 outputs/*
+ejecucion_programada/outputs/*
+ejecucion_programada/Logs/*
 # Pero permitir archivos CSV directos dentro de data
 !outputs/*.csv
 *.pyc
