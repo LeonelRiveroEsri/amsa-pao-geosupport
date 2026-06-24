@@ -63,6 +63,7 @@ IMAGE_SERVICE_NAME = "CL_MLP_PAO_IF_Ortho_Geosupport"
 PROJECT_VALUE = "PAO"
 SENSOR_VALUE = "DJI Mavic Enterprise"
 FOOTPRINT_NAME_FIELD = "Name"
+OVERVIEW_NAME_PATTERN = r"^ov"
 
 PRIMARY_SECTOR_WHERE = "Sensor <> 'DJI MATRICE 350 RTK'"
 FALLBACK_SECTOR_WHERE = "Sensor = 'DJI MATRICE 350 RTK'"
@@ -143,6 +144,19 @@ def log_error(message: str) -> None:
 def log_dataframe(df: pd.DataFrame, max_rows: int = 20) -> None:
     if LOGGER is not None and isinstance(df, pd.DataFrame):
         LOGGER.dataframe(df.head(max_rows))
+
+
+def is_overview_name(value: object) -> bool:
+    if value is None or pd.isna(value):
+        return False
+    return bool(re.match(OVERVIEW_NAME_PATTERN, str(value), flags=re.IGNORECASE))
+
+
+def filter_out_overviews(df: pd.DataFrame, name_column: str = "Name") -> pd.DataFrame:
+    if df.empty or name_column not in df.columns:
+        return df.copy()
+    mask = df[name_column].map(is_overview_name)
+    return df.loc[~mask].copy()
 
 
 def write_df(df: pd.DataFrame, path: Path) -> Path:
@@ -501,8 +515,10 @@ def successful_stage2_names(results_df: pd.DataFrame, load_df: pd.DataFrame) -> 
     if "mosaic_add_status" in results_df.columns:
         ok = ok | results_df["mosaic_add_status"].astype(str).str.lower().isin(["added", "already_exists"])
     if not ok.any() and "overall_status" in results_df.columns and results_df["overall_status"].astype(str).str.lower().eq("dry_run").all():
-        return load_df["Name"].dropna().astype(str).tolist()
-    return results_df.loc[ok, "Name"].dropna().astype(str).tolist()
+        names = load_df["Name"].dropna().astype(str).tolist()
+    else:
+        names = results_df.loc[ok, "Name"].dropna().astype(str).tolist()
+    return [name for name in names if not is_overview_name(name)]
 
 
 def update_footprints_stage(load_df: pd.DataFrame, results_df: pd.DataFrame, output_dir: Path, apply_changes: bool) -> dict:
@@ -640,6 +656,8 @@ def run_rasterio_stage(load_results_csv: Path, load_input_csv: Path, output_dir:
         replace_originals=args.replace_originals,
         create_backup_before_replace=args.create_backup_before_replace,
         build_pyramids_after_replace=args.build_pyramids_after_replace,
+        mask_black_background=args.mask_black_background,
+        black_threshold=args.black_threshold,
     )
     summary_csv = output_dir / "00_summary.csv"
     if summary_csv.exists():
@@ -772,6 +790,9 @@ def prepare_aprx_stage(load_df: pd.DataFrame, results_df: pd.DataFrame, output_d
         paths_df = load_df[load_df["Name"].isin(names)].copy()
     else:
         paths_df = load_df.copy() if not apply_changes else load_df.iloc[0:0].copy()
+    before_overview_filter = len(paths_df)
+    paths_df = filter_out_overviews(paths_df, "Name")
+    skipped_overviews = before_overview_filter - len(paths_df)
 
     aprx_results = []
     if not apply_changes:
@@ -824,6 +845,7 @@ def prepare_aprx_stage(load_df: pd.DataFrame, results_df: pd.DataFrame, output_d
                 {"metric": "aprx_output", "value": str(aprx_output)},
                 {"metric": "target_group", "value": f"{APRX_PARENT_GROUP_NAME} > {APRX_TARGET_GROUP_NAME}"},
                 {"metric": "candidates", "value": len(paths_df)},
+                {"metric": "skipped_overviews", "value": skipped_overviews},
                 {"metric": "renamed_layers", "value": renamed_count},
                 {"metric": "final_layers_in_group", "value": len(final_layers)},
             ]
@@ -849,6 +871,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--replace-originals", action="store_true", help="Rasterio reemplaza el TIFF original del datastore.")
     parser.add_argument("--create-backup-before-replace", action="store_true", help="Crea .bak antes de reemplazar original.")
     parser.add_argument("--build-pyramids-after-replace", action="store_true", help="Construye piramides/estadisticas despues de reemplazar.")
+    parser.add_argument("--mask-black-background", action="store_true", help="Enmascara collars/fondos negros en la normalizacion rasterio.")
+    parser.add_argument("--black-threshold", type=int, default=5, help="Umbral RGB para fondo negro si --mask-black-background esta activo.")
     parser.add_argument("--rasterio-env", default=DEFAULT_RASTERIO_ENV_PATH, help="Ambiente Python rasterio.")
     parser.add_argument("--aprx-output", default=None, help="Ruta del APRX resultado. Si no se indica queda en la corrida.")
     parser.add_argument("--log-name", default="geosupport_flujo_programado", help="Nombre base del archivo log.")

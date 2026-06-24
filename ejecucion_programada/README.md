@@ -84,9 +84,11 @@ Actualmente el BAT queda configurado por defecto para:
 
 `\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_10_DME7_PA7_IF6.tif`
 
-Ese BAT normaliza directamente el raster actual con rasterio:
+Ese BAT restaura primero el ultimo backup disponible y luego normaliza con rasterio:
 
-`--apply`
+`--apply --restore-latest-backup-first --mask-black-background --black-threshold 8`
+
+La opcion `--mask-black-background` se usa para imagenes cuyo TIFF original ya trae un collar negro interno. El recorte por footprint elimina el borde geografico, y esta opcion elimina ademas los pixeles casi negros que quedan dentro de ese recorte.
 
 Si se necesita restaurar antes de normalizar:
 

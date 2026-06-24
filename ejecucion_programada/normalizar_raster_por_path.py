@@ -131,6 +131,8 @@ def build_manifest(
     source_path: Path,
     footprint_geometry,
     output_dir: Path,
+    mask_black_background: bool = False,
+    black_threshold: int = 5,
 ) -> Path:
     target_sr = _raster_spatial_reference(source_path)
     footprint_geojson = _geometry_to_geojson_dict(footprint_geometry, target_sr)
@@ -145,9 +147,11 @@ def build_manifest(
                 "source_path": str(source_path),
                 "normalized_path": str(normalized_path),
                 "footprint_geojson": json.dumps(footprint_geojson, ensure_ascii=False, separators=(",", ":")),
+                "mask_black_background": str(bool(mask_black_background)),
+                "black_threshold": int(black_threshold),
             }
         ],
-        ["Name", "source_path", "normalized_path", "footprint_geojson"],
+        ["Name", "source_path", "normalized_path", "footprint_geojson", "mask_black_background", "black_threshold"],
     )
     return manifest_csv
 
@@ -193,6 +197,17 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Restaura el ultimo backup si existe; si no existe continua normalizando el raster actual.",
     )
+    parser.add_argument(
+        "--mask-black-background",
+        action="store_true",
+        help="Enmascara pixeles RGB casi negros del raster original, util para collars negros internos.",
+    )
+    parser.add_argument(
+        "--black-threshold",
+        type=int,
+        default=5,
+        help="Umbral RGB para detectar fondo negro cuando --mask-black-background esta activo.",
+    )
     parser.add_argument("--apply", action="store_true", help="Ejecuta el reemplazo. Sin esto solo prepara manifest y backup no se crea.")
     return parser.parse_args()
 
@@ -216,6 +231,8 @@ def main() -> int:
     print(f"Apply: {args.apply}")
     print(f"Restaurar backup primero: {args.restore_latest_backup_first}")
     print(f"Restaurar backup si existe: {args.restore_latest_backup_if_exists}")
+    print(f"Enmascarar fondo negro: {args.mask_black_background}")
+    print(f"Umbral negro: {args.black_threshold}")
 
     backup_path = ""
     restored_backup_path = ""
@@ -232,7 +249,14 @@ def main() -> int:
                 print("No hay backup previo. Se normaliza el raster actual.")
 
         footprint_geometry = get_footprint_geometry(args.footprints_fc, args.footprint_name_field, name)
-        manifest_csv = build_manifest(name, source_path, footprint_geometry, output_dir)
+        manifest_csv = build_manifest(
+            name,
+            source_path,
+            footprint_geometry,
+            output_dir,
+            mask_black_background=args.mask_black_background,
+            black_threshold=args.black_threshold,
+        )
         backup_path = str(backup_original(source_path, backup_root, run_timestamp))
         completed = run_rasterio_worker(
             manifest_csv=manifest_csv,
@@ -252,7 +276,14 @@ def main() -> int:
         arcpy.management.BuildPyramidsandStatistics(str(source_path))
     else:
         footprint_geometry = get_footprint_geometry(args.footprints_fc, args.footprint_name_field, name)
-        manifest_csv = build_manifest(name, source_path, footprint_geometry, output_dir)
+        manifest_csv = build_manifest(
+            name,
+            source_path,
+            footprint_geometry,
+            output_dir,
+            mask_black_background=args.mask_black_background,
+            black_threshold=args.black_threshold,
+        )
         print("Dry-run: no se creo backup ni se reemplazo el raster. Use --apply para ejecutar.")
 
     summary_csv = output_dir / "00_summary.csv"
@@ -265,6 +296,8 @@ def main() -> int:
             {"metric": "manifest_csv", "value": str(manifest_csv)},
             {"metric": "restored_backup_path", "value": restored_backup_path},
             {"metric": "backup_path", "value": backup_path},
+            {"metric": "mask_black_background", "value": args.mask_black_background},
+            {"metric": "black_threshold", "value": args.black_threshold},
             {"metric": "apply", "value": args.apply},
         ],
         ["metric", "value"],

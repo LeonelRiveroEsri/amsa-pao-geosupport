@@ -153,6 +153,8 @@ def build_rasterio_manifest(
     footprints_index: dict[str, object],
     normalized_dir: Union[str, Path],
     manifest_csv: Union[str, Path],
+    mask_black_background: bool = False,
+    black_threshold: int = 5,
 ) -> Path:
     manifest_rows = []
     missing_footprint_rows = []
@@ -183,6 +185,8 @@ def build_rasterio_manifest(
                     ensure_ascii=False,
                     separators=(",", ":"),
                 ),
+                "mask_black_background": str(bool(mask_black_background)),
+                "black_threshold": int(black_threshold),
             }
         )
 
@@ -201,7 +205,7 @@ def build_rasterio_manifest(
     return _write_csv(
         manifest_csv,
         manifest_rows,
-        ["Name", "source_path", "normalized_path", "footprint_geojson"],
+        ["Name", "source_path", "normalized_path", "footprint_geojson", "mask_black_background", "black_threshold"],
     )
 
 
@@ -325,6 +329,8 @@ def run_stage_04_rasterio_subprocess(
     create_backup_before_replace: bool = False,
     build_pyramids_after_replace: bool = False,
     backup_suffix: str = ".bak_original_before_rasterio",
+    mask_black_background: bool = False,
+    black_threshold: int = 5,
 ) -> subprocess.CompletedProcess:
     output_dir = Path(output_dir)
     normalized_dir = output_dir / "normalized_tif"
@@ -338,7 +344,14 @@ def run_stage_04_rasterio_subprocess(
         limit_rows=limit_rows,
     )
     footprints_index = load_footprints_index(footprints_feature_class, footprint_name_field)
-    build_rasterio_manifest(rows, footprints_index, normalized_dir, manifest_csv)
+    build_rasterio_manifest(
+        rows,
+        footprints_index,
+        normalized_dir,
+        manifest_csv,
+        mask_black_background=mask_black_background,
+        black_threshold=black_threshold,
+    )
 
     completed = run_rasterio_worker(
         manifest_csv=manifest_csv,

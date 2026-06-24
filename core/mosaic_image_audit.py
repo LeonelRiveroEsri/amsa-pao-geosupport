@@ -15,6 +15,7 @@ IMAGE_EXTENSIONS = ORTHO_MOSAIC_EXTENSIONS | {".jpg", ".jpeg", ".png", ".sid", "
 RENAME_PREFIX = "CL_MLP_PAO_IF_Ortho"
 DEFAULT_RENAMED_EXTENSION = ".tif"
 AUDIT_LOGIC_VERSION = "2026-06-15-spatial-sector-preserve-token"
+OVERVIEW_NAME_PATTERN = r"^ov"
 
 SECTOR_ALIASES = {
     "ESTACION DE BOMBEO N 1": "estacion_de_bombeo_no1",
@@ -45,6 +46,12 @@ def normalize_key(value) -> str | None:
     value = re.sub(r"[^a-z0-9]+", "_", value)
     value = re.sub(r"_+", "_", value).strip("_")
     return value or None
+
+
+def is_overview_name(value) -> bool:
+    if value is None or pd.isna(value):
+        return False
+    return bool(re.match(OVERVIEW_NAME_PATTERN, str(value), flags=re.IGNORECASE))
 
 
 def normalize_sector_text(value) -> str:
@@ -97,6 +104,7 @@ def extract_date_token_from_filename(file_name: str) -> dict | None:
 
     patterns = [
         r"(?<![A-Za-z0-9])(?P<day>\d{2})[-_](?P<month>\d{2})[-_](?P<year>20\d{2}|\d{2})(?!\d)",
+        r"(?=(?P<day>\d{2})[-_](?P<month>\d{2})[-_](?P<year>20\d{2}|\d{2})(?!\d))",
         r"(?<!\d)(?P<day>\d{2})(?P<month>\d{2})(?P<year>\d{2})(?!\d)",
         r"(?<!\d)(?P<year>20\d{2})(?P<month>\d{2})(?P<day>\d{2})(?!\d)",
     ]
@@ -110,24 +118,65 @@ def extract_date_token_from_filename(file_name: str) -> dict | None:
             day = int(match.group("day"))
 
             if is_valid_date_parts(2000 + int(year), month, day):
+                matched_text = match.group(0) or f"{match.group('day')}-{match.group('month')}-{match.group('year')}"
                 candidates.append(
                     {
                         "year": year,
                         "month": f"{month:02d}",
                         "day": f"{day:02d}",
                         "date_token": f"{year}_{month:02d}_{day:02d}",
-                        "matched_text": match.group(0),
+                        "matched_text": matched_text,
                         "span": match.span(),
                     }
                 )
             else:
-                invalid_matches.append(match.group(0))
+                invalid_text = match.group(0) or "-".join(
+                    str(match.group(part)) for part in ("day", "month", "year") if match.groupdict().get(part)
+                )
+                if invalid_text:
+                    invalid_matches.append(invalid_text)
+
+    if not candidates:
+        current_year_full = int(pd.Timestamp.today().year)
+        current_year = str(current_year_full)[-2:]
+        partial_patterns = [
+            r"(?<!\d)(?P<day>\d{2})[-_](?P<month>\d{2})(?![-_]\d{2,4})(?!\d)",
+        ]
+        for pattern in partial_patterns:
+            for match in re.finditer(pattern, stem_without_id):
+                month = int(match.group("month"))
+                day = int(match.group("day"))
+                if is_valid_date_parts(current_year_full, month, day):
+                    matched_text = match.group(0) or f"{match.group('day')}-{match.group('month')}"
+                    candidates.append(
+                        {
+                            "year": current_year,
+                            "month": f"{month:02d}",
+                            "day": f"{day:02d}",
+                            "date_token": f"{current_year}_{month:02d}_{day:02d}",
+                            "matched_text": matched_text,
+                            "span": match.span(),
+                            "date_source": "file_name_current_year_assumed",
+                            "date_warning": f"anio_asumido_{current_year_full}",
+                        }
+                    )
+                else:
+                    invalid_text = match.group(0) or "-".join(
+                        str(match.group(part)) for part in ("day", "month") if match.groupdict().get(part)
+                    )
+                    if invalid_text:
+                        invalid_matches.append(invalid_text)
 
     if not candidates:
         return None
 
     selected = candidates[-1]
-    selected["date_warning"] = "|".join(invalid_matches) if invalid_matches else None
+    warnings = []
+    if selected.get("date_warning"):
+        warnings.append(str(selected["date_warning"]))
+    if invalid_matches:
+        warnings.append("|".join(invalid_matches))
+    selected["date_warning"] = "|".join(warnings) if warnings else None
     return selected
 
 
@@ -205,7 +254,8 @@ def extract_sector_candidates_from_filename(file_name: str, date_match: dict | N
 
 
 def build_expected_image_name(file_name: str, output_extension: str = DEFAULT_RENAMED_EXTENSION) -> dict:
-    if re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE):
+    date_match = extract_date_token_from_filename(file_name)
+    if re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE) and not date_match:
         return {
             "expected_name": None,
             "expected_file_name": None,
@@ -218,7 +268,6 @@ def build_expected_image_name(file_name: str, output_extension: str = DEFAULT_RE
             "rename_status": "descartar_posible_plano",
         }
 
-    date_match = extract_date_token_from_filename(file_name)
     if not date_match:
         return {
             "expected_name": None,
@@ -268,7 +317,8 @@ def build_expected_image_name_from_date_sector(
     output_extension: str = DEFAULT_RENAMED_EXTENSION,
     date_match_override: dict | None = None,
 ) -> dict:
-    if not date_match_override and re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE):
+    date_match = date_match_override or extract_date_token_from_filename(file_name)
+    if re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE) and not date_match:
         return {
             "expected_name": None,
             "expected_file_name": None,
@@ -282,7 +332,6 @@ def build_expected_image_name_from_date_sector(
             "sector_source": "descartar_posible_plano",
         }
 
-    date_match = date_match_override or extract_date_token_from_filename(file_name)
     if not date_match:
         return {
             "expected_name": None,
@@ -349,7 +398,8 @@ def build_expected_image_name_from_spatial_result(
             date_match_override=date_match_override,
         )
 
-    if not date_match_override and re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE):
+    date_match = date_match_override or extract_date_token_from_filename(file_name)
+    if re.search(r"1001-03-T-CS|DW-", file_name, flags=re.IGNORECASE) and not date_match:
         return {
             "expected_name": None,
             "expected_file_name": None,
@@ -363,7 +413,6 @@ def build_expected_image_name_from_spatial_result(
             "sector_source": "descartar_posible_plano",
         }
 
-    date_match = date_match_override or extract_date_token_from_filename(file_name)
     if not date_match:
         return {
             "expected_name": None,
@@ -1055,6 +1104,9 @@ def extract_mosaic_path_parts(value) -> dict:
 
 
 def build_mosaic_image_inventory(mosaic_df: pd.DataFrame, candidate_fields: Iterable[str]) -> pd.DataFrame:
+    if "Name" in mosaic_df.columns:
+        mosaic_df = mosaic_df[~mosaic_df["Name"].map(is_overview_name)].copy()
+
     inventory_rows = []
 
     for field in candidate_fields:

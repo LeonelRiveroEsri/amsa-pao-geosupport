@@ -70,7 +70,13 @@ def _write_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
         writer.writerows(rows)
 
 
-def normalize_with_rasterio(source_path: Union[str, Path], footprint_geojson: dict, output_path: Union[str, Path]) -> Path:
+def normalize_with_rasterio(
+    source_path: Union[str, Path],
+    footprint_geojson: dict,
+    output_path: Union[str, Path],
+    mask_black_background: bool = False,
+    black_threshold: int = 5,
+) -> Path:
     import numpy as np
     import rasterio
     from rasterio.mask import mask
@@ -122,6 +128,11 @@ def normalize_with_rasterio(source_path: Union[str, Path], footprint_geojson: di
             raise ValueError(f"Raster con cantidad de bandas no soportada: {src.count}")
 
         alpha = (~masked_data.mask.all(axis=0)).astype("uint8") * 255
+        if mask_black_background:
+            black_threshold = int(black_threshold)
+            black_mask = (rgb[0] <= black_threshold) & (rgb[1] <= black_threshold) & (rgb[2] <= black_threshold)
+            rgb[:, black_mask] = 0
+            alpha[black_mask] = 0
         profile.update(count=3, dtype=rgb.dtype, nodata=0)
 
         with rasterio.open(temp_output_path, "w", **profile) as dst:
@@ -182,7 +193,15 @@ def run(args: argparse.Namespace) -> int:
                 raise FileNotFoundError(f"No existe raster origen: {source_path}")
 
             footprint_geojson = json.loads(row["footprint_geojson"])
-            normalize_with_rasterio(source_path, footprint_geojson, normalized_path)
+            mask_black_background = str(row.get("mask_black_background", "")).strip().lower() in {"1", "true", "yes", "si"}
+            black_threshold = int(float(row.get("black_threshold") or 5))
+            normalize_with_rasterio(
+                source_path,
+                footprint_geojson,
+                normalized_path,
+                mask_black_background=mask_black_background,
+                black_threshold=black_threshold,
+            )
 
             if args.replace_originals:
                 backup_path = replace_original(
