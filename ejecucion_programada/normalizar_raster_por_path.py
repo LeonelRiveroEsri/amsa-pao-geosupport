@@ -209,6 +209,11 @@ def parse_args() -> argparse.Namespace:
         help="Umbral RGB para detectar fondo negro cuando --mask-black-background esta activo.",
     )
     parser.add_argument("--apply", action="store_true", help="Ejecuta el reemplazo. Sin esto solo prepara manifest y backup no se crea.")
+    parser.add_argument(
+        "--review-only",
+        action="store_true",
+        help="Ejecuta rasterio y genera TIFF normalizado en outputs sin reemplazar el origen.",
+    )
     return parser.parse_args()
 
 
@@ -236,7 +241,10 @@ def main() -> int:
 
     backup_path = ""
     restored_backup_path = ""
-    if args.apply:
+    if args.apply and args.review_only:
+        raise ValueError("Use --apply o --review-only, no ambos en la misma ejecucion.")
+
+    if args.apply or args.review_only:
         if args.restore_latest_backup_first:
             restored_backup_path = str(restore_latest_backup(source_path, backup_root))
             print(f"Restaurado desde backup: {restored_backup_path}")
@@ -257,12 +265,13 @@ def main() -> int:
             mask_black_background=args.mask_black_background,
             black_threshold=args.black_threshold,
         )
-        backup_path = str(backup_original(source_path, backup_root, run_timestamp))
+        if args.apply:
+            backup_path = str(backup_original(source_path, backup_root, run_timestamp))
         completed = run_rasterio_worker(
             manifest_csv=manifest_csv,
             output_dir=output_dir,
             env_path=args.rasterio_env,
-            replace_originals=True,
+            replace_originals=args.apply,
             create_backup_before_replace=False,
         )
         (output_dir / "rasterio_worker_stdout.log").write_text(completed.stdout or "", encoding="utf-8")
@@ -272,8 +281,9 @@ def main() -> int:
             print(completed.stderr)
         if completed.returncode != 0:
             raise RuntimeError(f"Rasterio termino con codigo {completed.returncode}. Ver logs en {output_dir}")
-        set_arcgis_rgb_nodata(source_path)
-        arcpy.management.BuildPyramidsandStatistics(str(source_path))
+        if args.apply:
+            set_arcgis_rgb_nodata(source_path)
+            arcpy.management.BuildPyramidsandStatistics(str(source_path))
     else:
         footprint_geometry = get_footprint_geometry(args.footprints_fc, args.footprint_name_field, name)
         manifest_csv = build_manifest(
@@ -299,6 +309,7 @@ def main() -> int:
             {"metric": "mask_black_background", "value": args.mask_black_background},
             {"metric": "black_threshold", "value": args.black_threshold},
             {"metric": "apply", "value": args.apply},
+            {"metric": "review_only", "value": args.review_only},
         ],
         ["metric", "value"],
     )
