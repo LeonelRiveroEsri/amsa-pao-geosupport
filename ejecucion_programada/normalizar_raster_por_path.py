@@ -117,6 +117,15 @@ def restore_latest_backup(source_path: Path, backup_root: Path) -> Path:
     return latest_backup
 
 
+def restore_latest_backup_if_exists(source_path: Path, backup_root: Path) -> Path | None:
+    latest_backup = find_latest_backup(source_path, backup_root)
+    if latest_backup is None:
+        return None
+
+    shutil.copy2(latest_backup, source_path)
+    return latest_backup
+
+
 def build_manifest(
     name: str,
     source_path: Path,
@@ -179,6 +188,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Restaura el ultimo backup disponible del raster antes de volver a normalizar.",
     )
+    parser.add_argument(
+        "--restore-latest-backup-if-exists",
+        action="store_true",
+        help="Restaura el ultimo backup si existe; si no existe continua normalizando el raster actual.",
+    )
     parser.add_argument("--apply", action="store_true", help="Ejecuta el reemplazo. Sin esto solo prepara manifest y backup no se crea.")
     return parser.parse_args()
 
@@ -201,6 +215,7 @@ def main() -> int:
     print(f"Backup root: {backup_root}")
     print(f"Apply: {args.apply}")
     print(f"Restaurar backup primero: {args.restore_latest_backup_first}")
+    print(f"Restaurar backup si existe: {args.restore_latest_backup_if_exists}")
 
     backup_path = ""
     restored_backup_path = ""
@@ -208,6 +223,13 @@ def main() -> int:
         if args.restore_latest_backup_first:
             restored_backup_path = str(restore_latest_backup(source_path, backup_root))
             print(f"Restaurado desde backup: {restored_backup_path}")
+        elif args.restore_latest_backup_if_exists:
+            optional_backup = restore_latest_backup_if_exists(source_path, backup_root)
+            if optional_backup:
+                restored_backup_path = str(optional_backup)
+                print(f"Restaurado desde backup: {restored_backup_path}")
+            else:
+                print("No hay backup previo. Se normaliza el raster actual.")
 
         footprint_geometry = get_footprint_geometry(args.footprints_fc, args.footprint_name_field, name)
         manifest_csv = build_manifest(name, source_path, footprint_geometry, output_dir)

@@ -35,7 +35,7 @@ if not exist "%SCRIPT_PATH%" (
 
 if "%~1"=="" (
     set "RASTER_PATH=%DEFAULT_RASTER_PATH%"
-    set "EXTRA_ARGS=--apply --restore-latest-backup-first"
+    set "EXTRA_ARGS=--apply"
 ) else (
     set "RASTER_PATH=%~1"
     shift

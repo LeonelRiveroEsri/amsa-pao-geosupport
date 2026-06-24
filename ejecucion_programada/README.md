@@ -84,9 +84,21 @@ Actualmente el BAT queda configurado por defecto para:
 
 `\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_10_DME7_PA7_IF6.tif`
 
-Ese BAT restaura primero el ultimo backup disponible y luego vuelve a normalizar la imagen con rasterio:
+Ese BAT normaliza directamente el raster actual con rasterio:
 
-`--apply --restore-latest-backup-first`
+`--apply`
+
+Si se necesita restaurar antes de normalizar:
+
+```powershell
+.\ejecucion_programada\normalizar_raster_por_path.bat "PATH_TIF" --apply --restore-latest-backup-first
+```
+
+Si se quiere restaurar solo cuando exista backup y continuar si no existe:
+
+```powershell
+.\ejecucion_programada\normalizar_raster_por_path.bat "PATH_TIF" --apply --restore-latest-backup-if-exists
+```
 
 Si el `Name` del footprint no coincide exactamente con el nombre del archivo sin extension, se puede indicar:
 
