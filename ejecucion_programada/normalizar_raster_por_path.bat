@@ -6,6 +6,7 @@ set "PROJECT_ROOT=%SCRIPT_DIR%.."
 set "ARCGIS_PYTHON=C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\python.exe"
 set "SCRIPT_PATH=%SCRIPT_DIR%normalizar_raster_por_path.py"
 set "DEFAULT_RASTER_PATH=\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_10_DME7_PA7_IF6.tif"
+set "DEFAULT_EXTRA_ARGS=--apply --restore-latest-backup-first --mask-black-background --black-threshold 35"
 set "BAT_LOG_DIR=%SCRIPT_DIR%outputs\bat_logs"
 if not exist "%BAT_LOG_DIR%" mkdir "%BAT_LOG_DIR%"
 set "BAT_LOG=%BAT_LOG_DIR%\normalizar_raster_por_path_ultimo.log"
@@ -35,11 +36,15 @@ if not exist "%SCRIPT_PATH%" (
 
 if "%~1"=="" (
     set "RASTER_PATH=%DEFAULT_RASTER_PATH%"
-    set "EXTRA_ARGS=--apply --restore-latest-backup-first --mask-black-background --black-threshold 8"
+    set "EXTRA_ARGS=%DEFAULT_EXTRA_ARGS%"
 ) else (
     set "RASTER_PATH=%~1"
     shift
-    set "EXTRA_ARGS=%*"
+    if "%~1"=="" (
+        set "EXTRA_ARGS=%DEFAULT_EXTRA_ARGS%"
+    ) else (
+        set "EXTRA_ARGS=%*"
+    )
 )
 
 pushd "%PROJECT_ROOT%"

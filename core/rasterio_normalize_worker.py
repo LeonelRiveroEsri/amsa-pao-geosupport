@@ -70,6 +70,34 @@ def _write_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
         writer.writerows(rows)
 
 
+def edge_connected_mask(mask):
+    """Retorna pixeles True conectados al borde usando operaciones numpy vectorizadas."""
+    import numpy as np
+
+    if not mask.any():
+        return mask
+
+    connected = np.zeros(mask.shape, dtype=bool)
+    connected[0, :] = mask[0, :]
+    connected[-1, :] = mask[-1, :]
+    connected[:, 0] = mask[:, 0]
+    connected[:, -1] = mask[:, -1]
+
+    previous_count = -1
+    current_count = int(connected.sum())
+    while current_count != previous_count:
+        previous_count = current_count
+        expanded = connected.copy()
+        expanded[1:, :] |= connected[:-1, :]
+        expanded[:-1, :] |= connected[1:, :]
+        expanded[:, 1:] |= connected[:, :-1]
+        expanded[:, :-1] |= connected[:, 1:]
+        connected = expanded & mask
+        current_count = int(connected.sum())
+
+    return connected
+
+
 def normalize_with_rasterio(
     source_path: Union[str, Path],
     footprint_geojson: dict,
@@ -130,9 +158,10 @@ def normalize_with_rasterio(
         alpha = (~masked_data.mask.all(axis=0)).astype("uint8") * 255
         if mask_black_background:
             black_threshold = int(black_threshold)
-            black_mask = (rgb[0] <= black_threshold) & (rgb[1] <= black_threshold) & (rgb[2] <= black_threshold)
-            rgb[:, black_mask] = 0
-            alpha[black_mask] = 0
+            dark_mask = (rgb[0] <= black_threshold) & (rgb[1] <= black_threshold) & (rgb[2] <= black_threshold)
+            border_dark_mask = edge_connected_mask(dark_mask)
+            rgb[:, border_dark_mask] = 0
+            alpha[border_dark_mask] = 0
         profile.update(count=3, dtype=rgb.dtype, nodata=0)
 
         with rasterio.open(temp_output_path, "w", **profile) as dst:

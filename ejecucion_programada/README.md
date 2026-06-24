@@ -86,9 +86,9 @@ Actualmente el BAT queda configurado por defecto para:
 
 Ese BAT restaura primero el ultimo backup disponible y luego normaliza con rasterio:
 
-`--apply --restore-latest-backup-first --mask-black-background --black-threshold 8`
+`--apply --restore-latest-backup-first --mask-black-background --black-threshold 35`
 
-La opcion `--mask-black-background` se usa para imagenes cuyo TIFF original ya trae un collar negro interno. El recorte por footprint elimina el borde geografico, y esta opcion elimina ademas los pixeles casi negros que quedan dentro de ese recorte.
+La opcion `--mask-black-background` se usa para imagenes cuyo TIFF original ya trae un collar negro interno. El recorte por footprint elimina el borde geografico, y esta opcion elimina ademas los pixeles oscuros conectados al borde de la imagen, evitando afectar sombras internas.
 
 Si se necesita restaurar antes de normalizar:
 
@@ -109,3 +109,7 @@ Si el `Name` del footprint no coincide exactamente con el nombre del archivo sin
 ```
 
 El backup del TIFF original queda en `Bkg_rasterio_normalizacion/<timestamp>/` dentro del proyecto.
+
+Si se pasa solo el `PATH_TIF` sin opciones adicionales, el BAT usa las opciones seguras por defecto:
+
+`--apply --restore-latest-backup-first --mask-black-background --black-threshold 35`
