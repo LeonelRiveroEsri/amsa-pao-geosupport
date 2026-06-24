@@ -67,3 +67,21 @@ Para borrarlas:
 ```
 
 El limpiador solo busca dentro del directorio del proyecto y en carpetas de salida asociadas a rasterio/normalizacion. No borra imagenes del datastore.
+
+## Normalizar un raster puntual
+
+Para corregir una imagen especifica ya cargada, indicando su path completo:
+
+```powershell
+.\ejecucion_programada\normalizar_raster_por_path.bat `
+  "\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_10_DME7_PA7_IF6.tif" `
+  --apply
+```
+
+Si el `Name` del footprint no coincide exactamente con el nombre del archivo sin extension, se puede indicar:
+
+```powershell
+.\ejecucion_programada\normalizar_raster_por_path.bat "PATH_TIF" --name "CL_MLP_PAO_IF_Ortho_26_05_10_DME7_PA7_IF6" --apply
+```
+
+El backup del TIFF original queda en `Bkg_rasterio_normalizacion/<timestamp>/` dentro del proyecto.
