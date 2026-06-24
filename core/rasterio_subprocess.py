@@ -7,9 +7,10 @@ import json
 import os
 import shutil
 import subprocess
-from datetime import datetime
 from pathlib import Path
 from typing import Iterable, Optional, Union
+
+import pandas as pd
 
 
 DEFAULT_RASTERIO_ENV_PATH = r"C:\Users\esrlrivero_adm\AppData\Local\ESRI\conda\envs\geo-raster-py311"
@@ -311,7 +312,7 @@ def run_stage_04_rasterio_subprocess(
 ) -> subprocess.CompletedProcess:
     output_dir = Path(output_dir)
     normalized_dir = output_dir / "normalized_tif"
-    run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_timestamp = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
     manifest_csv = output_dir / f"rasterio_manifest_{run_timestamp}.csv"
 
     rows = read_stage_2_rows(

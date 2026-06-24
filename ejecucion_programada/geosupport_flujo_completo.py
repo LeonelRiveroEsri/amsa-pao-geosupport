@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import datetime as dt
 import json
 import re
 import sys
@@ -124,21 +123,21 @@ def log(message: str) -> None:
     if LOGGER is not None:
         LOGGER.info(message)
     else:
-        print(f"[{dt.datetime.now().strftime('%H:%M:%S')}] {message}", flush=True)
+        print(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] {message}", flush=True)
 
 
 def log_warning(message: str) -> None:
     if LOGGER is not None:
         LOGGER.warning(message)
     else:
-        print(f"[{dt.datetime.now().strftime('%H:%M:%S')}] WARN - {message}", flush=True)
+        print(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] WARN - {message}", flush=True)
 
 
 def log_error(message: str) -> None:
     if LOGGER is not None:
         LOGGER.error(message)
     else:
-        print(f"[{dt.datetime.now().strftime('%H:%M:%S')}] ERROR - {message}", flush=True)
+        print(f"[{pd.Timestamp.now().strftime('%H:%M:%S')}] ERROR - {message}", flush=True)
 
 
 def log_dataframe(df: pd.DataFrame, max_rows: int = 20) -> None:
@@ -163,7 +162,7 @@ def date_token_to_iso(date_token: str | None) -> str | None:
 
 
 def today_iso() -> str:
-    return dt.date.today().isoformat()
+    return pd.Timestamp.today().strftime("%Y-%m-%d")
 
 
 def add_date_lookup_keys(lookup: dict, name: str, date_value: str) -> None:
@@ -842,7 +841,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("input_folder", help="Folder raiz con las imagenes nuevas.")
     parser.add_argument("--apply", action="store_true", help="Ejecuta cambios reales. Sin esto solo prepara/revisa.")
     parser.add_argument("--output-root", default=str(SCRIPT_DIR / "outputs"), help="Directorio raiz de salidas.")
-    parser.add_argument("--run-id", default=dt.datetime.now().strftime("%Y%m%d_%H%M%S"), help="Identificador de corrida.")
+    parser.add_argument("--run-id", default=pd.Timestamp.now().strftime("%Y%m%d_%H%M%S"), help="Identificador de corrida.")
     parser.add_argument("--date-json", default=str(DEFAULT_DATE_JSON), help="JSON opcional con fechas por nombre de archivo.")
     parser.add_argument("--date-excel", default=None, help="Excel opcional con fechas por nombre de archivo.")
     parser.add_argument("--overwrite-copy", action="store_true", help="Sobrescribe archivos existentes en datastore.")

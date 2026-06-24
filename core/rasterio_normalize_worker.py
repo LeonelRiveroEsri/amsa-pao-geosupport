@@ -12,7 +12,7 @@ import json
 import shutil
 import sys
 import os
-from datetime import datetime
+import time
 from pathlib import Path
 from typing import Optional, Union
 
@@ -222,7 +222,7 @@ def run(args: argparse.Namespace) -> int:
         counts[row["status"]] = counts.get(row["status"], 0) + 1
 
     summary_rows = [
-        {"metric": "run_timestamp", "value": datetime.now().strftime("%Y%m%d_%H%M%S")},
+        {"metric": "run_timestamp", "value": time.strftime("%Y%m%d_%H%M%S")},
         {"metric": "manifest_csv", "value": str(args.manifest)},
         {"metric": "rows_to_process", "value": len(rows)},
         {"metric": "replace_originals", "value": args.replace_originals},

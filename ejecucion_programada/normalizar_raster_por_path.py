@@ -5,8 +5,9 @@ import csv
 import json
 import shutil
 import sys
-from datetime import datetime
 from pathlib import Path
+
+import pandas as pd
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -76,12 +77,12 @@ def backup_original(source_path: Path, backup_root: Path, run_timestamp: str) ->
 
     backup_path = backup_dir / source_path.name
     if backup_path.exists():
-        backup_path = backup_dir / f"{source_path.stem}_{datetime.now().strftime('%H%M%S')}{source_path.suffix}"
+        backup_path = backup_dir / f"{source_path.stem}_{pd.Timestamp.now().strftime('%H%M%S')}{source_path.suffix}"
 
     shutil.copy2(source_path, backup_path)
 
     metadata = {
-        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "created_at": pd.Timestamp.now().isoformat(),
         "original_path": str(source_path),
         "backup_path": str(backup_path),
     }
@@ -145,7 +146,7 @@ def main() -> int:
     args = parse_args()
     source_path = Path(args.raster_path)
     name = args.name or infer_name_from_path(source_path)
-    run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_timestamp = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
     output_dir = Path(args.output_dir) / run_timestamp
     backup_root = Path(args.backup_root)
 

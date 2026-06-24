@@ -1,14 +1,11 @@
-from datetime import datetime
 from pathlib import Path
 import os
 import pandas as pd
 import sys
 import traceback
 import unicodedata
-from datetime import datetime
 import re
 from typing import Optional, Tuple
-from datetime import datetime, timedelta
 import re
 import shutil
 
@@ -147,7 +144,7 @@ def rename_logs(old_file_name):
     if os.path.exists(old_file_name):
         os.rename(old_file_name, new_file_name)
 
-def _parse_dt(line: str) -> Optional[datetime]:
+def _parse_dt(line: str) -> Optional[pd.Timestamp]:
     """
     Extrae datetime desde una línea con formato:
       'dd/mm/yyyy, HH:MM:SS'
@@ -155,7 +152,7 @@ def _parse_dt(line: str) -> Optional[datetime]:
     m = TS_RX.search(line)
     if not m:
         return None
-    return datetime.strptime(f"{m.group(1)} {m.group(2)}", "%d/%m/%Y %H:%M:%S")
+    return pd.to_datetime(f"{m.group(1)} {m.group(2)}", format="%d/%m/%Y %H:%M:%S")
 
 def _read_text_robust(path_log: Path) -> str:
     """Lee el archivo intentando varios encodings."""
@@ -166,7 +163,7 @@ def _read_text_robust(path_log: Path) -> str:
             continue
     return path_log.read_text(encoding="utf-8", errors="replace")
 
-def obtener_primera_fecha_log(path_log: str) -> Optional[datetime]:
+def obtener_primera_fecha_log(path_log: str) -> Optional[pd.Timestamp]:
     """
     Busca la PRIMERA fecha/hora parseable dentro del log.
     Ideal para medir antigüedad real del contenido (no mtime).
@@ -182,7 +179,7 @@ def obtener_primera_fecha_log(path_log: str) -> Optional[datetime]:
             return dt
     return None
 
-def log_excede_antiguedad(path_log: Path, max_age_days: int, now: Optional[datetime] = None) -> bool:
+def log_excede_antiguedad(path_log: Path, max_age_days: int, now: Optional[pd.Timestamp] = None) -> bool:
     """
     True si el log tiene una primera fecha y supera max_age_days respecto a 'now'.
     Fallback: si no hay fecha parseable, usa mtime del archivo.
@@ -191,18 +188,18 @@ def log_excede_antiguedad(path_log: Path, max_age_days: int, now: Optional[datet
         return False
 
     if now is None:
-        now = datetime.now()
+        now = pd.Timestamp.now()
 
     first_dt = obtener_primera_fecha_log(str(path_log))
     if first_dt is not None:
         age = now - first_dt
-        return age >= timedelta(days=int(max_age_days))
+        return age >= pd.Timedelta(days=int(max_age_days))
 
     # Fallback por si el log no tiene timestamps reconocibles
     try:
-        mtime = datetime.fromtimestamp(path_log.stat().st_mtime)
+        mtime = pd.Timestamp.fromtimestamp(path_log.stat().st_mtime)
         age = now - mtime
-        return age >= timedelta(days=int(max_age_days))
+        return age >= pd.Timedelta(days=int(max_age_days))
     except Exception:
         return False
 
@@ -260,7 +257,7 @@ def obtener_horas_inicio_fin(path_log: str):
 
     return (hora_ini, hora_fin) if (hora_ini and hora_fin) else None
 
-def _format_td(td: timedelta) -> str:
+def _format_td(td) -> str:
     total = int(td.total_seconds())
     h = total // 3600
     m = (total % 3600) // 60
@@ -275,7 +272,7 @@ def duracion_ejecucion(path_log: str):
     return fin - ini
 
 def write(text_F, tipo_p, etapa, pCadena, *, colored_terminal=True):
-    tiempo = datetime.now().strftime("%d/%m/%Y, %H:%M:%S - ")
+    tiempo = pd.Timestamp.now().strftime("%d/%m/%Y, %H:%M:%S - ")
     mensaje = f"{tipo_p}{tiempo}{etapa}{pCadena}\n"
     msg = f"{tipo_p}{tiempo}{etapa}{pCadena}"
 

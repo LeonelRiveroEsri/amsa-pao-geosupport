@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import argparse
 import csv
-from datetime import datetime
 from pathlib import Path
+
+import pandas as pd
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -120,7 +121,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     project_root = Path(args.project_root).resolve()
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
     report_path = (
         Path(args.report)
         if args.report
