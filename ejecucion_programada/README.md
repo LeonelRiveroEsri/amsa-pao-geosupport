@@ -84,6 +84,10 @@ Actualmente el BAT queda configurado por defecto para:
 
 `\\amssclgis10.ams.gmams.cl\CL_MLP_PAO\Chacay_El_Mauro_Drone\26_05\CL_MLP_PAO_IF_Ortho_26_05_10_DME7_PA7_IF6.tif`
 
+Ese BAT restaura primero el ultimo backup disponible y luego vuelve a normalizar la imagen con rasterio:
+
+`--apply --restore-latest-backup-first`
+
 Si el `Name` del footprint no coincide exactamente con el nombre del archivo sin extension, se puede indicar:
 
 ```powershell

@@ -93,6 +93,30 @@ def backup_original(source_path: Path, backup_root: Path, run_timestamp: str) ->
     return backup_path
 
 
+def find_latest_backup(source_path: Path, backup_root: Path) -> Path | None:
+    if not backup_root.exists():
+        return None
+
+    candidates = []
+    for candidate in backup_root.rglob(source_path.name):
+        if candidate.is_file():
+            candidates.append(candidate)
+
+    if not candidates:
+        return None
+
+    return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
+def restore_latest_backup(source_path: Path, backup_root: Path) -> Path:
+    latest_backup = find_latest_backup(source_path, backup_root)
+    if latest_backup is None:
+        raise FileNotFoundError(f"No existe backup previo para restaurar: {source_path.name} en {backup_root}")
+
+    shutil.copy2(latest_backup, source_path)
+    return latest_backup
+
+
 def build_manifest(
     name: str,
     source_path: Path,
@@ -119,6 +143,18 @@ def build_manifest(
     return manifest_csv
 
 
+def set_arcgis_rgb_nodata(raster_path: Path) -> None:
+    """Define 0 como NoData en bandas RGB para que ArcGIS no dibuje el fondo negro."""
+    try:
+        band_count = int(arcpy.management.GetRasterProperties(str(raster_path), "BANDCOUNT").getOutput(0))
+    except Exception:
+        band_count = 3
+
+    nodata_values = ";".join(f"{band} 0" for band in range(1, min(band_count, 3) + 1))
+    if nodata_values:
+        arcpy.management.SetRasterProperties(str(raster_path), nodata=nodata_values)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Normaliza un raster puntual con rasterio, respalda el original en el proyecto y sobrescribe el TIFF origen."
@@ -137,6 +173,11 @@ def parse_args() -> argparse.Namespace:
         "--backup-root",
         default=str(PROJECT_ROOT / "Bkg_rasterio_normalizacion"),
         help="Directorio del proyecto donde se guarda el backup del TIFF original.",
+    )
+    parser.add_argument(
+        "--restore-latest-backup-first",
+        action="store_true",
+        help="Restaura el ultimo backup disponible del raster antes de volver a normalizar.",
     )
     parser.add_argument("--apply", action="store_true", help="Ejecuta el reemplazo. Sin esto solo prepara manifest y backup no se crea.")
     return parser.parse_args()
@@ -159,12 +200,17 @@ def main() -> int:
     print(f"Salida: {output_dir}")
     print(f"Backup root: {backup_root}")
     print(f"Apply: {args.apply}")
-
-    footprint_geometry = get_footprint_geometry(args.footprints_fc, args.footprint_name_field, name)
-    manifest_csv = build_manifest(name, source_path, footprint_geometry, output_dir)
+    print(f"Restaurar backup primero: {args.restore_latest_backup_first}")
 
     backup_path = ""
+    restored_backup_path = ""
     if args.apply:
+        if args.restore_latest_backup_first:
+            restored_backup_path = str(restore_latest_backup(source_path, backup_root))
+            print(f"Restaurado desde backup: {restored_backup_path}")
+
+        footprint_geometry = get_footprint_geometry(args.footprints_fc, args.footprint_name_field, name)
+        manifest_csv = build_manifest(name, source_path, footprint_geometry, output_dir)
         backup_path = str(backup_original(source_path, backup_root, run_timestamp))
         completed = run_rasterio_worker(
             manifest_csv=manifest_csv,
@@ -180,8 +226,11 @@ def main() -> int:
             print(completed.stderr)
         if completed.returncode != 0:
             raise RuntimeError(f"Rasterio termino con codigo {completed.returncode}. Ver logs en {output_dir}")
+        set_arcgis_rgb_nodata(source_path)
         arcpy.management.BuildPyramidsandStatistics(str(source_path))
     else:
+        footprint_geometry = get_footprint_geometry(args.footprints_fc, args.footprint_name_field, name)
+        manifest_csv = build_manifest(name, source_path, footprint_geometry, output_dir)
         print("Dry-run: no se creo backup ni se reemplazo el raster. Use --apply para ejecutar.")
 
     summary_csv = output_dir / "00_summary.csv"
@@ -192,6 +241,7 @@ def main() -> int:
             {"metric": "raster_path", "value": str(source_path)},
             {"metric": "Name", "value": name},
             {"metric": "manifest_csv", "value": str(manifest_csv)},
+            {"metric": "restored_backup_path", "value": restored_backup_path},
             {"metric": "backup_path", "value": backup_path},
             {"metric": "apply", "value": args.apply},
         ],

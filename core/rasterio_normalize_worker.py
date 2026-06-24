@@ -122,16 +122,15 @@ def normalize_with_rasterio(source_path: Union[str, Path], footprint_geojson: di
             raise ValueError(f"Raster con cantidad de bandas no soportada: {src.count}")
 
         alpha = (~masked_data.mask.all(axis=0)).astype("uint8") * 255
-        profile.update(count=4, dtype=rgb.dtype, nodata=None)
+        profile.update(count=3, dtype=rgb.dtype, nodata=0)
 
         with rasterio.open(temp_output_path, "w", **profile) as dst:
             dst.write(rgb.astype(profile["dtype"], copy=False), indexes=[1, 2, 3])
-            dst.write(alpha, 4)
+            dst.write_mask(alpha)
             dst.colorinterp = (
                 rasterio.enums.ColorInterp.red,
                 rasterio.enums.ColorInterp.green,
                 rasterio.enums.ColorInterp.blue,
-                rasterio.enums.ColorInterp.alpha,
             )
 
     temp_output_path.replace(output_path)

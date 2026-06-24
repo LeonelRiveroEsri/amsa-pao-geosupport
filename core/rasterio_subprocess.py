@@ -295,6 +295,22 @@ def build_pyramids_for_replaced_results(results_csv: Union[str, Path]) -> None:
             arcpy.management.BuildPyramidsandStatistics(row["source_path"])
 
 
+def set_arcgis_nodata_for_replaced_results(results_csv: Union[str, Path]) -> None:
+    import arcpy
+
+    for row in _read_csv(results_csv):
+        if row.get("status") != "normalized_and_replaced" or not row.get("source_path"):
+            continue
+        source_path = row["source_path"]
+        try:
+            band_count = int(arcpy.management.GetRasterProperties(source_path, "BANDCOUNT").getOutput(0))
+        except Exception:
+            band_count = 3
+        nodata_values = ";".join(f"{band} 0" for band in range(1, min(band_count, 3) + 1))
+        if nodata_values:
+            arcpy.management.SetRasterProperties(source_path, nodata=nodata_values)
+
+
 def run_stage_04_rasterio_subprocess(
     load_results_csv: Union[str, Path],
     load_input_attributes_csv: Union[str, Path],
@@ -350,7 +366,10 @@ def run_stage_04_rasterio_subprocess(
             )
         )
 
+    results_csv = output_dir / "01_normalizacion_rasterio_resultados.csv"
+    if replace_originals:
+        set_arcgis_nodata_for_replaced_results(results_csv)
     if build_pyramids_after_replace:
-        build_pyramids_for_replaced_results(output_dir / "01_normalizacion_rasterio_resultados.csv")
+        build_pyramids_for_replaced_results(results_csv)
 
     return completed
