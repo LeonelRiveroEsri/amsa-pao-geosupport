@@ -9,13 +9,15 @@ set "SCRIPT_PATH=%SCRIPT_DIR%limpiar_imagenes_rasterio.py"
 if not exist "%ARCGIS_PYTHON%" (
     echo ERROR: No se encontro Python de ArcGIS Pro:
     echo %ARCGIS_PYTHON%
-    exit /b 1
+    set "EXIT_CODE=1"
+    goto FIN
 )
 
 if not exist "%SCRIPT_PATH%" (
     echo ERROR: No se encontro el script:
     echo %SCRIPT_PATH%
-    exit /b 1
+    set "EXIT_CODE=1"
+    goto FIN
 )
 
 pushd "%PROJECT_ROOT%"
@@ -23,4 +25,9 @@ pushd "%PROJECT_ROOT%"
 set "EXIT_CODE=%ERRORLEVEL%"
 popd
 
+:FIN
+echo.
+echo Proceso finalizado con codigo: %EXIT_CODE%
+echo Presione una tecla para cerrar esta ventana...
+pause >nul
 exit /b %EXIT_CODE%

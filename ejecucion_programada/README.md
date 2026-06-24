@@ -11,6 +11,10 @@ Este folder contiene el script consolidado para ejecutar el flujo completo de im
 7. Normaliza las imagenes con rasterio por subprocess.
 8. Genera una copia APRX lista para revisar/publicar con capas ordenadas.
 
+Los archivos `.bat` no cierran la ventana al terminar. Muestran el codigo de salida y esperan una tecla para poder revisar mensajes de ArcGIS Pro Python y del subprocess de rasterio.
+
+El proceso principal corre con Python de ArcGIS Pro. La normalizacion rasterio se ejecuta desde ese proceso mediante subprocess usando el ambiente configurado en `--rasterio-env`.
+
 ## Ejecucion de revision
 
 ```powershell
