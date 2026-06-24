@@ -5,6 +5,7 @@ excel/~$*.xlsx
 outputs/*
 ejecucion_programada/outputs/*
 ejecucion_programada/Logs/*
+Bkg_rasterio_normalizacion/*
 # Pero permitir archivos CSV directos dentro de data
 !outputs/*.csv
 *.pyc
