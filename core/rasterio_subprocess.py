@@ -13,7 +13,7 @@ from typing import Iterable, Optional, Union
 import pandas as pd
 
 
-DEFAULT_RASTERIO_ENV_PATH = r"D:\Env\geo-raster-py311"
+DEFAULT_RASTERIO_ENV_PATH = r"C:\Users\esrlrivero_adm\AppData\Local\ESRI\conda\envs\geo-raster-py311"
 
 
 def _read_csv(path: Union[str, Path]) -> list[dict[str, str]]:
